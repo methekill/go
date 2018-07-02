@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/stellar/go/services/horizon/internal/db2/history"
-	"github.com/stellar/go/services/horizon/internal/resource/operations"
 	"github.com/stellar/go/services/horizon/internal/test"
+	"github.com/stellar/go/protocols/horizon/operations"
 )
 
 func TestOperationActions_Index(t *testing.T) {
@@ -102,9 +102,16 @@ func TestOperationActions_Regressions(t *testing.T) {
 	ht := StartHTTPTest(t, "base")
 	defer ht.Finish()
 
+	// ensure that trying to stream ops from an account that doesn't exist
+	// fails before streaming the hello message.  Regression test for #285
+	w := ht.Get("/accounts/foo/operations?limit=1", test.RequestHelperStreaming)
+	if ht.Assert.Equal(404, w.Code) {
+		ht.Assert.ProblemType(w.Body, "not_found")
+	}
+
 	// #202 - price is not shown on manage_offer operations
 	test.LoadScenario("trades")
-	w := ht.Get("/operations/21474840577")
+	w = ht.Get("/operations/21474840577")
 	if ht.Assert.Equal(200, w.Code) {
 		var result operations.ManageOffer
 		err := json.Unmarshal(w.Body.Bytes(), &result)
