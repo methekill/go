@@ -12,8 +12,8 @@
 // Xor constant to output CRC : 0000
 // Output for "123456789"     : 31C3
 //
-// ported from the c++ code in the stellar-core codebase
-// (https://github.com/stellar/stellar-core).  The code is licensed
+// ported from the c++ code in the fable-core codebase
+// (https://github.com/stellar/fable-core).  The code is licensed
 // as:
 /*
  * Copyright 2001-2010 Georges Menie (www.menie.org)

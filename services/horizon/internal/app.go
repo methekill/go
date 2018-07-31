@@ -19,12 +19,12 @@ import (
 	"github.com/stellar/go/services/horizon/internal/log"
 	"github.com/stellar/go/services/horizon/internal/paths"
 	"github.com/stellar/go/services/horizon/internal/reap"
+	"github.com/stellar/go/services/horizon/internal/render/sse"
 	"github.com/stellar/go/services/horizon/internal/txsub"
 	"github.com/stellar/go/support/app"
 	"github.com/stellar/go/support/db"
 	"golang.org/x/net/http2"
 	graceful "gopkg.in/tylerb/graceful.v1"
-	"github.com/stellar/go/services/horizon/internal/render/sse"
 )
 
 // App represents the root of the state of a horizon instance.
@@ -192,7 +192,7 @@ func (a *App) UpdateStellarCoreInfo() {
 	}
 
 	fail := func(err error) {
-		log.Warnf("could not load stellar-core info: %s", err)
+		log.Warnf("could not load fable-core info: %s", err)
 	}
 
 	core := &stellarcore.Client{
@@ -235,7 +235,7 @@ func (a *App) DeleteUnretainedHistory() error {
 func (a *App) Tick() {
 	var wg sync.WaitGroup
 	log.Debug("ticking app")
-	// update ledger state and stellar-core info in parallel
+	// update ledger state and fable-core info in parallel
 	wg.Add(2)
 	go func() { a.UpdateLedgerState(); wg.Done() }()
 	go func() { a.UpdateStellarCoreInfo(); wg.Done() }()

@@ -18,7 +18,7 @@ type System struct {
 	nextRun time.Time
 }
 
-// New initializes the reaper, causing it to begin polling the stellar-core
+// New initializes the reaper, causing it to begin polling the fable-core
 // database for now ledgers and ingesting data into the horizon database.
 func New(retention uint, horizon *db.Session) *System {
 	r := &System{

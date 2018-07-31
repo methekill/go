@@ -1,12 +1,12 @@
 // Package amount provides utilities for converting numbers to/from
-// the format used internally to stellar-core.
+// the format used internally to fable-core.
 //
-// stellar-core represents asset "amounts" as 64-bit integers, but to enable
+// fable-core represents asset "amounts" as 64-bit integers, but to enable
 // fractional units of an asset, horizon, the client-libraries and other built
-// on top of stellar-core use a convention, encoding amounts as a string of
+// on top of fable-core use a convention, encoding amounts as a string of
 // decimal digits with up to seven digits of precision in the fractional
 // portion. For example, an amount shown as "101.001" in horizon would be
-// represented in stellar-core as 1010010000.
+// represented in fable-core as 1010010000.
 package amount
 
 import (

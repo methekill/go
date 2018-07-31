@@ -1,5 +1,5 @@
 // Package ingest contains the ingestion system for horizon.  This system takes
-// data produced by the connected stellar-core database, transforms it and
+// data produced by the connected fable-core database, transforms it and
 // inserts it into the horizon database.
 package ingest
 
@@ -51,7 +51,7 @@ type Cursor struct {
 	// attempt to be ingested in this session.
 	LastLedger int32
 
-	// CoreDB is the stellar-core db that data is ingested from.
+	// CoreDB is the fable-core db that data is ingested from.
 	CoreDB *db.Session
 
 	Metrics        *IngesterMetrics
@@ -92,7 +92,7 @@ type System struct {
 	// be written to.
 	HorizonDB *db.Session
 
-	// CoreDB is the stellar-core db that data is ingested from.
+	// CoreDB is the fable-core db that data is ingested from.
 	CoreDB *db.Session
 
 	Metrics IngesterMetrics
@@ -100,13 +100,13 @@ type System struct {
 	// Network is the passphrase for the network being imported
 	Network string
 
-	// StellarCoreURL is the http endpoint of the stellar-core that data is being
+	// StellarCoreURL is the http endpoint of the fable-core that data is being
 	// ingested from.
 	StellarCoreURL string
 
 	// SkipCursorUpdate causes the ingestor to skip
 	// reporting the "last imported ledger" cursor to
-	// stellar-core
+	// fable-core
 	SkipCursorUpdate bool
 
 	// HistoryRetentionCount is the desired minimum number of ledgers to
@@ -155,7 +155,7 @@ type Session struct {
 	// Network is the passphrase for the network being imported
 	Network string
 
-	// StellarCoreURL is the http endpoint of the stellar-core that data is being
+	// StellarCoreURL is the http endpoint of the fable-core that data is being
 	// ingested from.
 	StellarCoreURL string
 
@@ -165,7 +165,7 @@ type Session struct {
 
 	// SkipCursorUpdate causes the session to skip
 	// reporting the "last imported ledger" cursor to
-	// stellar-core
+	// fable-core
 	SkipCursorUpdate bool
 
 	// Metrics is a reference to where the session should record its metric information
@@ -183,7 +183,7 @@ type Session struct {
 	Ingested int
 }
 
-// New initializes the ingester, causing it to begin polling the stellar-core
+// New initializes the ingester, causing it to begin polling the fable-core
 // database for now ledgers and ingesting data into the horizon database.
 func New(network string, coreURL string, core, horizon *db.Session) *System {
 	i := &System{

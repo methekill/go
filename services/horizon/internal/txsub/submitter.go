@@ -11,7 +11,7 @@ import (
 )
 
 // NewDefaultSubmitter returns a new, simple Submitter implementation
-// that submits directly to the stellar-core at `url` using the http client
+// that submits directly to the fable-core at `url` using the http client
 // `h`.
 func NewDefaultSubmitter(h *http.Client, url string) Submitter {
 	return &submitter{
@@ -23,13 +23,13 @@ func NewDefaultSubmitter(h *http.Client, url string) Submitter {
 }
 
 // submitter is the default implementation for the Submitter interface.  It
-// submits directly to the configured stellar-core instance using the
+// submits directly to the configured fable-core instance using the
 // configured http client.
 type submitter struct {
 	StellarCore *stellarcore.Client
 }
 
-// Submit sends the provided envelope to stellar-core and parses the response into
+// Submit sends the provided envelope to fable-core and parses the response into
 // a SubmissionResult
 func (sub *submitter) Submit(ctx context.Context, env string) (result SubmissionResult) {
 	start := time.Now()
@@ -43,7 +43,7 @@ func (sub *submitter) Submit(ctx context.Context, env string) (result Submission
 
 	// interpet response
 	if cresp.IsException() {
-		result.Err = errors.Errorf("stellar-core exception: %s", cresp.Exception)
+		result.Err = errors.Errorf("fable-core exception: %s", cresp.Exception)
 		return
 	}
 
@@ -53,7 +53,7 @@ func (sub *submitter) Submit(ctx context.Context, env string) (result Submission
 	case proto.TXStatusPending, proto.TXStatusDuplicate:
 		//noop.  A nil Err indicates success
 	default:
-		result.Err = errors.Errorf("Unrecognized stellar-core status response: %s", cresp.Status)
+		result.Err = errors.Errorf("Unrecognized fable-core status response: %s", cresp.Status)
 	}
 
 	return

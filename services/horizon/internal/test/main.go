@@ -127,7 +127,7 @@ func StellarCoreDatabase(t *testing.T) *sqlx.DB {
 }
 
 // StellarCoreDatabaseURL returns the database connection the url any test
-// use when connecting to the stellar-core database
+// use when connecting to the fable-core database
 //
 // DEPRECATED:  use `StellarCoreURL()` from test/db package
 func StellarCoreDatabaseURL() string {

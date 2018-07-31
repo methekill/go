@@ -11,7 +11,7 @@ import (
 // ResultProvider represents an abstract store that can lookup Result objects
 // by transaction hash or by [address,sequence] pairs.  A ResultProvider is
 // used within the transaction submission system to decide whether a submission should
-// be submitted to the backing stellar-core process, as well as looking up the status
+// be submitted to the backing fable-core process, as well as looking up the status
 // of each transaction in the open submission list at each tick (i.e. ledger close)
 type ResultProvider interface {
 	// Look up a result by transaction hash
@@ -54,10 +54,10 @@ type OpenSubmissionList interface {
 	Pending(context.Context) []string
 }
 
-// Submitter represents the low-level "submit a transaction to stellar-core"
+// Submitter represents the low-level "submit a transaction to fable-core"
 // provider.
 type Submitter interface {
-	// Submit sends the provided transaction envelope to stellar-core
+	// Submit sends the provided transaction envelope to fable-core
 	Submit(context.Context, string) SubmissionResult
 }
 
@@ -97,7 +97,7 @@ type SubmissionResult struct {
 	Err error
 
 	// Duration records the time it took to submit a transaction
-	// to stellar-core
+	// to fable-core
 	Duration time.Duration
 }
 

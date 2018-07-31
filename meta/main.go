@@ -1,5 +1,5 @@
 // Package meta provides helpers for processing the metadata that is produced by
-// stellar-core while processing transactions.
+// fable-core while processing transactions.
 package meta
 
 import "github.com/stellar/go/xdr"

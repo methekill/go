@@ -11,10 +11,10 @@ go install github.com/stellar/go/services/horizon
 dropdb hayashi_scenarios --if-exists
 createdb hayashi_scenarios
 
-export STELLAR_CORE_DATABASE_URL="postgres://localhost/hayashi_scenarios?sslmode=disable"
+export FABLE_CORE_DATABASE_URL="postgres://localhost/hayashi_scenarios?sslmode=disable"
 export DATABASE_URL="postgres://localhost/horizon_scenarios?sslmode=disable"
 export NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
-export STELLAR_CORE_URL="http://localhost:8080"
+export FABLE_CORE_URL="http://localhost:8080"
 export SKIP_CURSOR_UPDATE="true"
 
 # run all scenarios
@@ -24,7 +24,7 @@ for i in $PACKAGES; do
   bundle exec scc -r $i --dump-root-db > $CORE_SQL
 
   # load the core scenario
-  psql $STELLAR_CORE_DATABASE_URL < $CORE_SQL
+  psql $FABLE_CORE_DATABASE_URL < $CORE_SQL
 
   # recreate horizon dbs
   dropdb horizon_scenarios --if-exists

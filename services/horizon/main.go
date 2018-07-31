@@ -26,8 +26,8 @@ func init() {
 
 	viper.BindEnv("port", "PORT")
 	viper.BindEnv("db-url", "DATABASE_URL")
-	viper.BindEnv("stellar-core-db-url", "STELLAR_CORE_DATABASE_URL")
-	viper.BindEnv("stellar-core-url", "STELLAR_CORE_URL")
+	viper.BindEnv("fable-core-db-url", "FABLE_CORE_DATABASE_URL")
+	viper.BindEnv("fable-core-url", "FABLE_CORE_URL")
 	viper.BindEnv("per-hour-rate-limit", "PER_HOUR_RATE_LIMIT")
 	viper.BindEnv("redis-url", "REDIS_URL")
 	viper.BindEnv("ruby-horizon-url", "RUBY_HORIZON_URL")
@@ -61,15 +61,15 @@ func init() {
 	)
 
 	rootCmd.PersistentFlags().String(
-		"stellar-core-db-url",
+		"fable-core-db-url",
 		"",
-		"stellar-core postgres database to connect with",
+		"fable-core postgres database to connect with",
 	)
 
 	rootCmd.PersistentFlags().String(
-		"stellar-core-url",
+		"fable-core-url",
 		"",
-		"stellar-core to connect with (for http commands)",
+		"fable-core to connect with (for http commands)",
 	)
 
 	rootCmd.PersistentFlags().Int(
@@ -135,7 +135,7 @@ func init() {
 	rootCmd.PersistentFlags().Bool(
 		"ingest",
 		false,
-		"causes this horizon process to ingest data from stellar-core into horizon's db",
+		"causes this horizon process to ingest data from fable-core into horizon's db",
 	)
 
 	rootCmd.PersistentFlags().String(
@@ -153,7 +153,7 @@ func init() {
 	rootCmd.PersistentFlags().Uint(
 		"history-stale-threshold",
 		0,
-		"the maximum number of ledgers the history db is allowed to be out of date from the connected stellar-core db before horizon considers history stale",
+		"the maximum number of ledgers the history db is allowed to be out of date from the connected fable-core db before horizon considers history stale",
 	)
 
 	rootCmd.AddCommand(dbCmd)
@@ -177,12 +177,12 @@ func initConfig() {
 		log.Fatal("Invalid config: db-url is blank.  Please specify --db-url on the command line or set the DATABASE_URL environment variable.")
 	}
 
-	if viper.GetString("stellar-core-db-url") == "" {
-		log.Fatal("Invalid config: stellar-core-db-url is blank.  Please specify --stellar-core-db-url on the command line or set the STELLAR_CORE_DATABASE_URL environment variable.")
+	if viper.GetString("fable-core-db-url") == "" {
+		log.Fatal("Invalid config: fable-core-db-url is blank.  Please specify --fable-core-db-url on the command line or set the FABLE_CORE_DATABASE_URL environment variable.")
 	}
 
-	if viper.GetString("stellar-core-url") == "" {
-		log.Fatal("Invalid config: stellar-core-url is blank.  Please specify --stellar-core-url on the command line or set the STELLAR_CORE_URL environment variable.")
+	if viper.GetString("fable-core-url") == "" {
+		log.Fatal("Invalid config: fable-core-url is blank.  Please specify --fable-core-url on the command line or set the FABLE_CORE_URL environment variable.")
 	}
 
 	ll, err := logrus.ParseLevel(viper.GetString("log-level"))
@@ -204,8 +204,8 @@ func initConfig() {
 
 	config = horizon.Config{
 		DatabaseURL:            viper.GetString("db-url"),
-		StellarCoreDatabaseURL: viper.GetString("stellar-core-db-url"),
-		StellarCoreURL:         viper.GetString("stellar-core-url"),
+		StellarCoreDatabaseURL: viper.GetString("fable-core-db-url"),
+		StellarCoreURL:         viper.GetString("fable-core-url"),
 		Port:                   viper.GetInt("port"),
 		RateLimit:              throttled.PerHour(viper.GetInt("per-hour-rate-limit")),
 		RedisURL:               viper.GetString("redis-url"),

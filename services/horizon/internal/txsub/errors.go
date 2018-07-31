@@ -22,7 +22,7 @@ var (
 )
 
 // FailedTransactionError represent an error that occurred because
-// stellar-core rejected the transaction.  ResultXDR is a base64
+// fable-core rejected the transaction.  ResultXDR is a base64
 // encoded TransactionResult struct
 type FailedTransactionError struct {
 	ResultXDR string

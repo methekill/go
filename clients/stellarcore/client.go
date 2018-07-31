@@ -16,9 +16,9 @@ import (
 )
 
 // Client represents a client that is capable of communicating with a
-// stellar-core server using HTTP
+// fable-core server using HTTP
 type Client struct {
-	// HTTP is the client to use when communicating with stellar-core.  If nil,
+	// HTTP is the client to use when communicating with fable-core.  If nil,
 	// http.DefaultClient will be used.
 	HTTP HTTP
 
@@ -82,7 +82,7 @@ func (c *Client) SetCursor(ctx context.Context, id string, cursor int32) error {
 
 	body := strings.TrimSpace(string(raw))
 	if body != SetCursorDone {
-		return errors.Errorf("failed to set cursor on stellar-core: %s", body)
+		return errors.Errorf("failed to set cursor on fable-core: %s", body)
 	}
 
 	return nil
@@ -117,7 +117,7 @@ func (c *Client) SubmitTransaction(ctx context.Context, envelope string) (resp *
 	return
 }
 
-// WaitForNetworkSync continually polls the connected stellar-core until it
+// WaitForNetworkSync continually polls the connected fable-core until it
 // receives a response that indicated the node has synced with the network
 func (c *Client) WaitForNetworkSync(ctx context.Context) error {
 
@@ -150,7 +150,7 @@ func (c *Client) http() HTTP {
 	return c.HTTP
 }
 
-// simpleGet returns a new GET request to the connected stellar-core using the
+// simpleGet returns a new GET request to the connected fable-core using the
 // provided path and query values to construct the result.
 func (c *Client) simpleGet(
 	ctx context.Context,

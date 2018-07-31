@@ -118,7 +118,7 @@ In this configuration all servers have the same `stellar.issuer_public_key` and 
 * Check if public master key is correct. Use CLI tool (`bifrost check-keys`) to generate a few addresses and ensure you have corresponding private keys! You should probably send test transactions to some of these addresses and check if you can withdraw funds.
 * Make sure `using_proxy` variable is set to correct value. Otherwise you will see your proxy IP instead of users' IPs in logs.
 * Make sure you're not connecting to testnets.
-* Deploy at least 2 bifrost, bitcoin-core, geth, stellar-core and horizon servers. Use multi-AZ database.
+* Deploy at least 2 bifrost, bitcoin-core, geth, fable-core and horizon servers. Use multi-AZ database.
 * Do not use SDF's horizon servers. There is no SLA and we cannot guarantee it will handle your load.
 * Make sure bifrost <-> bitcoin-core and bifrost <-> geth connections are not public or are encrypted (mitm attacks).
 * It's a good idea to set "Authorization required" and "Authorization revocable" [flags](https://www.stellar.org/developers/guides/concepts/accounts.html#flags) on issuing account during ICO stage to remove trustlines to accounts with lost keys. You need to set `stellar.needs_authorize` in config to `true` if you want to use this feature.

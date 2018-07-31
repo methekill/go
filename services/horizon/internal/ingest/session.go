@@ -177,7 +177,7 @@ func (is *Session) ingestEffects() {
 		claims := []xdr.ClaimOfferAtom{}
 		result := is.Cursor.OperationResult()
 
-		// KNOWN ISSUE:  stellar-core creates results for CreatePassiveOffer operations
+		// KNOWN ISSUE:  fable-core creates results for CreatePassiveOffer operations
 		// with the wrong result arm set.
 		if result.Type == xdr.OperationTypeManageOffer {
 			claims = result.MustManageOfferResult().MustSuccess().OffersClaimed
@@ -501,7 +501,7 @@ func (is *Session) ingestTrades() {
 	case xdr.OperationTypeCreatePassiveOffer:
 		result := is.Cursor.OperationResult()
 
-		// KNOWN ISSUE:  stellar-core creates results for CreatePassiveOffer operations
+		// KNOWN ISSUE:  fable-core creates results for CreatePassiveOffer operations
 		// with the wrong result arm set.
 		if result.Type == xdr.OperationTypeManageOffer {
 			trades = result.MustManageOfferResult().MustSuccess().OffersClaimed
@@ -512,7 +512,7 @@ func (is *Session) ingestTrades() {
 
 	q := history.Q{Session: is.Ingestion.DB}
 	for i, trade := range trades {
-		// stellar-core will opportunisticly garbage collect invalid offers (in the
+		// fable-core will opportunisticly garbage collect invalid offers (in the
 		// event that a trader spends down their balance).  These garbage collected
 		// offers get emitted in the result with the amount values set to zero.
 		//
@@ -805,9 +805,9 @@ func (is *Session) operationFlagDetails(result map[string]interface{}, f int32, 
 	result[prefix+"_flags_s"] = s
 }
 
-// reportCursorState makes an http request to the configured stellar-core server
+// reportCursorState makes an http request to the configured fable-core server
 // to report that it has finished processing the data being ingested.  This
-// allows stellar-core to free that storage when next it runs its own
+// allows fable-core to free that storage when next it runs its own
 // maintenance.
 func (is *Session) reportCursorState() error {
 	if is.StellarCoreURL == "" {
