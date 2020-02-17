@@ -5,9 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync"
-
-	"github.com/stellar/go/support/log"
 )
 
 // Event is the packet of data that gets sent over the wire to a connected
@@ -32,29 +29,11 @@ type Eventable interface {
 	SseEvent() Event
 }
 
-// Pumped returns a channel that will be closed the next time the input pump
-// sends.  It can be used similar to `ctx.Done()`, like so:  `<-sse.Pumped()`
-func Pumped() <-chan struct{} {
-	return nextTick
-}
-
-// Tick triggers any open SSE streams to tick by replacing and closing the
-// `nextTick` trigger channel.
-func Tick() {
-	lock.Lock()
-	prev := nextTick
-	nextTick = make(chan struct{})
-	lock.Unlock()
-	close(prev)
-}
-
 // WritePreamble prepares this http connection for streaming using Server Sent
-// Events.  It sends the initial http response with the appropriate headers to
+// Events. It sends the initial http response with the appropriate headers to
 // do so.
 func WritePreamble(ctx context.Context, w http.ResponseWriter) bool {
-
 	_, flushable := w.(http.Flusher)
-
 	if !flushable {
 		//TODO: render a problem struct instead of simple string
 		http.Error(w, "Streaming Not Supported", http.StatusBadRequest)
@@ -76,10 +55,9 @@ func WritePreamble(ctx context.Context, w http.ResponseWriter) bool {
 // sending it over the provided ResponseWriter and flushing.
 func WriteEvent(ctx context.Context, w http.ResponseWriter, e Event) {
 	if e.Error != nil {
-		fmt.Fprint(w, "event: err\n")
+		fmt.Fprint(w, "event: error\n")
 		fmt.Fprintf(w, "data: %s\n\n", e.Error.Error())
 		w.(http.Flusher).Flush()
-		log.Ctx(ctx).Error(e.Error)
 		return
 	}
 
@@ -119,9 +97,6 @@ var helloEvent = Event{
 	Retry: 1000,
 }
 
-var lock sync.Mutex
-var nextTick chan struct{}
-
 func getJSON(val interface{}) string {
 	js, err := json.Marshal(val)
 
@@ -130,10 +105,4 @@ func getJSON(val interface{}) string {
 	}
 
 	return string(js)
-}
-
-func init() {
-	lock.Lock()
-	nextTick = make(chan struct{})
-	lock.Unlock()
 }

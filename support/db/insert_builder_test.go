@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stellar/go/support/db/dbtest"
@@ -11,7 +12,7 @@ import (
 func TestInsertBuilder_Exec(t *testing.T) {
 	db := dbtest.Postgres(t).Load(testSchema)
 	defer db.Close()
-	sess := &Session{DB: db.Open()}
+	sess := &Session{DB: db.Open(), Ctx: context.Background()}
 	defer sess.DB.Close()
 
 	tbl := sess.GetTable("people")
@@ -23,7 +24,7 @@ func TestInsertBuilder_Exec(t *testing.T) {
 
 	if assert.NoError(t, err) {
 		var found []person
-		err := sess.SelectRaw(
+		err = sess.SelectRaw(
 			&found,
 			"SELECT * FROM people WHERE name = ?",
 			"bubba",
@@ -54,8 +55,8 @@ func TestInsertBuilder_Exec(t *testing.T) {
 	}).Exec()
 
 	if assert.NoError(t, err) {
-		count, err := r.RowsAffected()
-		require.NoError(t, err)
+		count, err2 := r.RowsAffected()
+		require.NoError(t, err2)
 		assert.Equal(t, int64(2), count)
 	}
 

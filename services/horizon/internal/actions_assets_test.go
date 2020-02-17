@@ -3,8 +3,9 @@ package horizon
 import (
 	"testing"
 
-	"github.com/stellar/go/protocols/horizon/base"
 	"github.com/stellar/go/protocols/horizon"
+	"github.com/stellar/go/protocols/horizon/base"
+	"github.com/stellar/go/services/horizon/internal/test"
 	"github.com/stellar/go/support/render/hal"
 )
 
@@ -231,6 +232,13 @@ func TestAssetsActions(t *testing.T) {
 			ht := StartHTTPTest(t, "ingest_asset_stats")
 			defer ht.Finish()
 
+			// Ugly but saves us time needed to change each `StartHTTPTest` occurence.
+			appConfig := NewTestConfig()
+			appConfig.EnableAssetStats = true
+
+			ht.App = NewApp(appConfig)
+			ht.RH = test.NewRequestHelper(ht.App.web.router)
+
 			w := ht.Get(kase.path)
 			ht.Assert.Equal(200, w.Code)
 			ht.Assert.PageOf(len(kase.wantItems), w.Body)
@@ -254,6 +262,13 @@ func TestInvalidAssetCode(t *testing.T) {
 	ht := StartHTTPTest(t, "ingest_asset_stats")
 	defer ht.Finish()
 
+	// Ugly but saves us time needed to change each `StartHTTPTest` occurence.
+	appConfig := NewTestConfig()
+	appConfig.EnableAssetStats = true
+
+	ht.App = NewApp(appConfig)
+	ht.RH = test.NewRequestHelper(ht.App.web.router)
+
 	w := ht.Get("/assets?asset_code=ABCDEFGHIJKL")
 	ht.Assert.Equal(200, w.Code)
 
@@ -265,9 +280,24 @@ func TestInvalidAssetIssuer(t *testing.T) {
 	ht := StartHTTPTest(t, "ingest_asset_stats")
 	defer ht.Finish()
 
+	// Ugly but saves us time needed to change each `StartHTTPTest` occurence.
+	appConfig := NewTestConfig()
+	appConfig.EnableAssetStats = true
+
+	ht.App = NewApp(appConfig)
+	ht.RH = test.NewRequestHelper(ht.App.web.router)
+
 	w := ht.Get("/assets?asset_issuer=GC23QF2HUE52AMXUFUH3AYJAXXGXXV2VHXYYR6EYXETPKDXZSAW67XO4")
 	ht.Assert.Equal(200, w.Code)
 
 	w = ht.Get("/assets?asset_issuer=invalid")
 	ht.Assert.Equal(400, w.Code)
+}
+
+func TestAssetStatsDisabledByDefault(t *testing.T) {
+	ht := StartHTTPTest(t, "ingest_asset_stats")
+	defer ht.Finish()
+
+	w := ht.Get("/assets?asset_issuer=GC23QF2HUE52AMXUFUH3AYJAXXGXXV2VHXYYR6EYXETPKDXZSAW67XO4")
+	ht.Assert.Equal(404, w.Code)
 }

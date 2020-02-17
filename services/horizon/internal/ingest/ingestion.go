@@ -3,9 +3,8 @@ package ingest
 import (
 	"encoding/json"
 	"fmt"
-	"time"
-
 	"math"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
@@ -18,7 +17,19 @@ import (
 
 // ClearAll clears the entire history database
 func (ingest *Ingestion) ClearAll() error {
-	return ingest.Clear(0, math.MaxInt64)
+	tables := []string{
+		string(AssetStatsTableName),
+		string(AccountsTableName),
+		string(AssetsTableName),
+		string(EffectsTableName),
+		string(LedgersTableName),
+		string(OperationParticipantsTableName),
+		string(OperationsTableName),
+		string(TradesTableName),
+		string(TransactionParticipantsTableName),
+		string(TransactionsTableName),
+	}
+	return ingest.DB.TruncateTables(tables)
 }
 
 // Clear removes a range of data from the history database, exclusive of the end
@@ -53,10 +64,6 @@ func (ingest *Ingestion) Clear(start int64, end int64) error {
 	err = clear(start, end, "history_trades", "history_operation_id")
 	if err != nil {
 		return errors.Wrap(err, "Error clearing history_trades")
-	}
-	err = clear(start, end, "asset_stats", "id")
-	if err != nil {
-		return errors.Wrap(err, "Error clearing asset_stats")
 	}
 
 	return nil
@@ -177,7 +184,8 @@ func (ingest *Ingestion) UpdateAccountIDs(tables []TableName) error {
 func (ingest *Ingestion) Ledger(
 	id int64,
 	header *core.LedgerHeader,
-	txs int,
+	successTxsCount int,
+	failedTxsCount int,
 	ops int,
 ) {
 	ingest.builders[LedgersTableName].Values(
@@ -194,7 +202,9 @@ func (ingest *Ingestion) Ledger(
 		time.Unix(header.CloseTime, 0).UTC(),
 		time.Now().UTC(),
 		time.Now().UTC(),
-		txs,
+		successTxsCount, // `transaction_count`
+		successTxsCount, // `successful_transaction_count`
+		failedTxsCount,
 		ops,
 		header.Data.LedgerVersion,
 		header.DataXDR(),
@@ -309,21 +319,23 @@ func (ingest *Ingestion) Trade(
 // Transaction ingests the provided transaction data into a new row in the
 // `history_transactions` table
 func (ingest *Ingestion) Transaction(
+	successful bool,
 	id int64,
 	tx *core.Transaction,
 	fee *core.TransactionFee,
-) {
+) error {
 	// Enquote empty signatures
 	signatures := tx.Base64Signatures()
 
-	ingest.builders[TransactionsTableName].Values(
+	return ingest.builders[TransactionsTableName].Values(
 		id,
 		tx.TransactionHash,
 		tx.LedgerSequence,
 		tx.Index,
 		tx.SourceAddress(),
 		tx.Sequence(),
-		tx.Fee(),
+		tx.MaxFee(),
+		tx.FeeCharged(),
 		len(tx.Envelope.Tx.Operations),
 		tx.EnvelopeXDR(),
 		tx.ResultXDR(),
@@ -335,6 +347,7 @@ func (ingest *Ingestion) Transaction(
 		tx.Memo(),
 		time.Now().UTC(),
 		time.Now().UTC(),
+		successful,
 	)
 }
 
@@ -367,6 +380,8 @@ func (ingest *Ingestion) createInsertBuilders() {
 			"created_at",
 			"updated_at",
 			"transaction_count",
+			"successful_transaction_count",
+			"failed_transaction_count",
 			"operation_count",
 			"protocol_version",
 			"ledger_header",
@@ -382,7 +397,8 @@ func (ingest *Ingestion) createInsertBuilders() {
 			"application_order",
 			"account",
 			"account_sequence",
-			"fee_paid",
+			"max_fee",
+			"fee_charged",
 			"operation_count",
 			"tx_envelope",
 			"tx_result",
@@ -394,6 +410,7 @@ func (ingest *Ingestion) createInsertBuilders() {
 			"memo",
 			"created_at",
 			"updated_at",
+			"successful",
 		},
 	}
 
@@ -452,17 +469,6 @@ func (ingest *Ingestion) createInsertBuilders() {
 			"base_is_seller",
 		},
 	}
-
-	ingest.builders[AssetStatsTableName] = &BatchInsertBuilder{
-		TableName: AssetStatsTableName,
-		Columns: []string{
-			"id",
-			"amount",
-			"num_accounts",
-			"flags",
-			"toml",
-		},
-	}
 }
 
 func (ingest *Ingestion) commit() error {
@@ -483,5 +489,10 @@ func (ingest *Ingestion) formatTimeBounds(bounds *xdr.TimeBounds) interface{} {
 		return sq.Expr("int8range(?,?)", bounds.MinTime, nil)
 	}
 
-	return sq.Expr("int8range(?,?)", bounds.MinTime, bounds.MaxTime)
+	maxTime := bounds.MaxTime
+	if maxTime > math.MaxInt64 {
+		maxTime = math.MaxInt64
+	}
+
+	return sq.Expr("int8range(?,?)", bounds.MinTime, maxTime)
 }

@@ -12,17 +12,24 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/stellar/go/tools/stellar-archivist/internal"
+	"github.com/stellar/go/support/errors"
+	"github.com/stellar/go/support/historyarchive"
 )
 
 func status(a string, opts *Options) {
-	arch := archivist.MustConnect(a, opts.ConnectOpts)
-	state, e := arch.GetRootHAS()
-	if e != nil {
-		log.Fatal(e)
+	arch := historyarchive.MustConnect(a, opts.ConnectOpts)
+	state, err := arch.GetRootHAS()
+	if err != nil {
+		log.Fatal(errors.Wrap(err, "Error getting HAS"))
 	}
-	buckets := state.Buckets()
-	summ, nz := state.LevelSummary()
+	buckets, err := state.Buckets()
+	if err != nil {
+		log.Fatal(errors.Wrap(err, "Error getting buckets"))
+	}
+	summ, nz, err := state.LevelSummary()
+	if err != nil {
+		log.Fatal(errors.Wrap(err, "Error getting level summary"))
+	}
 	fmt.Printf("\n")
 	fmt.Printf("       Archive: %s\n", a)
 	fmt.Printf("        Server: %s\n", state.Server)
@@ -36,23 +43,48 @@ type Options struct {
 	Low         int
 	High        uint32
 	Last        int
+	Recent      bool
 	Profile     bool
-	CommandOpts archivist.CommandOptions
-	ConnectOpts archivist.ConnectOptions
+	CommandOpts historyarchive.CommandOptions
+	ConnectOpts historyarchive.ConnectOptions
 }
 
-func (opts *Options) SetRange(arch *archivist.Archive) {
-	if arch != nil && opts.Last != -1 {
-		state, e := arch.GetRootHAS()
-		if e == nil {
-			low := state.CurrentLedger - uint32(opts.Last)
-			opts.CommandOpts.Range =
-				archivist.MakeRange(low, state.CurrentLedger)
-			return
+func (opts *Options) SetRange(srcArch *historyarchive.Archive, dstArch *historyarchive.Archive) {
+	if srcArch != nil {
+
+		// If we got a src and dst archive and were passed --recent, we extract
+		// the range as the sequence-difference between the two.
+		if dstArch != nil && opts.Recent {
+			srcState, e1 := srcArch.GetRootHAS()
+			dstState, e2 := dstArch.GetRootHAS()
+			if e1 == nil && e2 == nil {
+				low := dstState.CurrentLedger
+				high := srcState.CurrentLedger
+				opts.CommandOpts.Range =
+					historyarchive.MakeRange(low, high)
+				return
+			}
+
+			// If we got a src, no dst, and a --last N flag, we extract the
+			// range as the last N ledgers in the src archive.
+		} else if opts.Last != -1 {
+			state, e := srcArch.GetRootHAS()
+			if e == nil {
+				low := uint32(0)
+				if state.CurrentLedger > uint32(opts.Last) {
+					low = state.CurrentLedger - uint32(opts.Last)
+				}
+				opts.CommandOpts.Range =
+					historyarchive.MakeRange(low, state.CurrentLedger)
+				return
+			}
 		}
 	}
+
+	// Otherwise we fall back to the provided low and high, which further
+	// default to the entire numeric range of a uint32.
 	opts.CommandOpts.Range =
-		archivist.MakeRange(uint32(opts.Low),
+		historyarchive.MakeRange(uint32(opts.Low),
 			uint32(opts.High))
 
 }
@@ -65,9 +97,15 @@ func (opts *Options) MaybeProfile() {
 	}
 }
 
+func logArchive(a string, opts *Options) {
+	arch := historyarchive.MustConnect(a, opts.ConnectOpts)
+	opts.SetRange(arch, nil)
+	arch.Log(&opts.CommandOpts)
+}
+
 func scan(a string, opts *Options) {
-	arch := archivist.MustConnect(a, opts.ConnectOpts)
-	opts.SetRange(arch)
+	arch := historyarchive.MustConnect(a, opts.ConnectOpts)
+	opts.SetRange(arch, nil)
 	e1 := arch.Scan(&opts.CommandOpts)
 	e2 := arch.ReportMissing(&opts.CommandOpts)
 	e3 := arch.ReportInvalid(&opts.CommandOpts)
@@ -83,22 +121,22 @@ func scan(a string, opts *Options) {
 }
 
 func mirror(src string, dst string, opts *Options) {
-	srcArch := archivist.MustConnect(src, opts.ConnectOpts)
-	dstArch := archivist.MustConnect(dst, opts.ConnectOpts)
-	opts.SetRange(srcArch)
+	srcArch := historyarchive.MustConnect(src, opts.ConnectOpts)
+	dstArch := historyarchive.MustConnect(dst, opts.ConnectOpts)
+	opts.SetRange(srcArch, dstArch)
 	log.Printf("mirroring %v -> %v\n", src, dst)
-	e := archivist.Mirror(srcArch, dstArch, &opts.CommandOpts)
+	e := historyarchive.Mirror(srcArch, dstArch, &opts.CommandOpts)
 	if e != nil {
 		log.Fatal(e)
 	}
 }
 
 func repair(src string, dst string, opts *Options) {
-	srcArch := archivist.MustConnect(src, opts.ConnectOpts)
-	dstArch := archivist.MustConnect(dst, opts.ConnectOpts)
-	opts.SetRange(srcArch)
+	srcArch := historyarchive.MustConnect(src, opts.ConnectOpts)
+	dstArch := historyarchive.MustConnect(dst, opts.ConnectOpts)
+	opts.SetRange(srcArch, dstArch)
 	log.Printf("repairing %v -> %v\n", src, dst)
-	e := archivist.Repair(srcArch, dstArch, &opts.CommandOpts)
+	e := historyarchive.Repair(srcArch, dstArch, &opts.CommandOpts)
 	if e != nil {
 		log.Fatal(e)
 	}
@@ -129,6 +167,14 @@ func main() {
 		"high",
 		uint32(0xffffffff),
 		"last ledger to act on",
+	)
+
+	rootCmd.PersistentFlags().BoolVarP(
+		&opts.Recent,
+		"recent",
+		"r",
+		false,
+		"act on ledger-range difference between achives",
 	)
 
 	rootCmd.PersistentFlags().IntVar(
@@ -205,6 +251,14 @@ func main() {
 	})
 
 	rootCmd.AddCommand(&cobra.Command{
+		Use: "log",
+		Run: func(cmd *cobra.Command, args []string) {
+			opts.MaybeProfile()
+			logArchive(firstArg(args), &opts)
+		},
+	})
+
+	rootCmd.AddCommand(&cobra.Command{
 		Use: "scan",
 		Run: func(cmd *cobra.Command, args []string) {
 			opts.MaybeProfile()
@@ -233,7 +287,7 @@ func main() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use: "dumpxdr",
 		Run: func(cmd *cobra.Command, args []string) {
-			err := archivist.DumpXdrAsJson(args)
+			err := historyarchive.DumpXdrAsJson(args)
 			if err != nil {
 				log.Fatal(err)
 			}

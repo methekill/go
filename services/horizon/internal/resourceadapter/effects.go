@@ -3,13 +3,12 @@ package resourceadapter
 import (
 	"context"
 
+	"github.com/stellar/go/protocols/horizon/base"
+	"github.com/stellar/go/protocols/horizon/effects"
 	"github.com/stellar/go/services/horizon/internal/db2/history"
 	"github.com/stellar/go/services/horizon/internal/httpx"
 	"github.com/stellar/go/support/render/hal"
-	"github.com/stellar/go/protocols/horizon/base"
-	"github.com/stellar/go/protocols/horizon/effects"
 )
-
 
 var EffectTypeNames = map[history.EffectType]string{
 	history.EffectAccountCreated:                     "account_created",
@@ -35,6 +34,7 @@ var EffectTypeNames = map[history.EffectType]string{
 	history.EffectDataCreated:                        "data_created",
 	history.EffectDataRemoved:                        "data_removed",
 	history.EffectDataUpdated:                        "data_updated",
+	history.EffectSequenceBumped:                     "sequence_bumped",
 }
 
 // NewEffect creates a new effect resource from the provided database representation
@@ -109,6 +109,12 @@ func NewEffect(
 		e := effects.Trade{Base: basev}
 		err = row.UnmarshalDetails(&e)
 		result = e
+	case history.EffectSequenceBumped:
+		e := effects.SequenceBumped{Base: basev}
+		hsb := history.SequenceBumped{}
+		err = row.UnmarshalDetails(&hsb)
+		e.NewSeq = hsb.NewSeq
+		result = e
 	default:
 		result = basev
 	}
@@ -125,8 +131,6 @@ func NewEffect(
 
 	return
 }
-
-
 
 // Populate loads this resource from `row`
 func PopulateBaseEffect(ctx context.Context, this *effects.Base, row history.Effect, ledger history.Ledger) {

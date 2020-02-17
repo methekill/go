@@ -1,6 +1,9 @@
 package keypair
 
 import (
+	"crypto/rand"
+	"errors"
+	"io"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -37,6 +40,13 @@ func ItBehavesLikeAKP(subject *KP) {
 	Describe("Address()", func() {
 		It("returns the correct address", func() {
 			Expect((*subject).Address()).To(Equal(address))
+		})
+	})
+
+	Describe("FromAddress()", func() {
+		It("returns an address-only representation, or public key, of this key", func() {
+			fromAddress := (*subject).FromAddress()
+			Expect(fromAddress.Address()).To(Equal(address))
 		})
 	})
 
@@ -104,3 +114,217 @@ var _ = DescribeTable("keypair.Parse()",
 		ErrCase:  HaveOccurred(),
 	}),
 )
+
+type ParseFullCase struct {
+	Input    string
+	FullCase types.GomegaMatcher
+	ErrCase  types.GomegaMatcher
+}
+
+var _ = DescribeTable("keypair.ParseFull()",
+	func(c ParseFullCase) {
+		kp, err := ParseFull(c.Input)
+
+		Expect(kp).To(c.FullCase)
+		Expect(err).To(c.ErrCase)
+	},
+
+	Entry("a valid address", ParseFullCase{
+		Input:    "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H",
+		FullCase: BeNil(),
+		ErrCase:  HaveOccurred(),
+	}),
+	Entry("a corrupted address", ParseFullCase{
+		Input:    "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7O32H",
+		FullCase: BeNil(),
+		ErrCase:  HaveOccurred(),
+	}),
+	Entry("a valid seed", ParseFullCase{
+		Input:    "SDHOAMBNLGCE2MV5ZKIVZAQD3VCLGP53P3OBSBI6UN5L5XZI5TKHFQL4",
+		FullCase: Equal(&Full{seed: "SDHOAMBNLGCE2MV5ZKIVZAQD3VCLGP53P3OBSBI6UN5L5XZI5TKHFQL4"}),
+		ErrCase:  BeNil(),
+	}),
+	Entry("a corrupted seed", ParseFullCase{
+		Input:    "SDHOAMBNLGCE2MV5ZKIVZAQD3VCLGP53P3OBSBI6UN5L5XZI5TKHFQL3",
+		FullCase: BeNil(),
+		ErrCase:  HaveOccurred(),
+	}),
+	Entry("a blank string", ParseFullCase{
+		Input:    "",
+		FullCase: BeNil(),
+		ErrCase:  HaveOccurred(),
+	}),
+)
+
+type MustParseFullCase struct {
+	Input    string
+	FullCase types.GomegaMatcher
+	FuncCase types.GomegaMatcher
+}
+
+var _ = DescribeTable("keypair.MustParseFull()",
+	func(c MustParseFullCase) {
+		f := func() {
+			kp := MustParseFull(c.Input)
+			Expect(kp).To(c.FullCase)
+		}
+		Expect(f).To(c.FuncCase)
+	},
+
+	Entry("a valid address", MustParseFullCase{
+		Input:    "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H",
+		FullCase: BeNil(),
+		FuncCase: Panic(),
+	}),
+	Entry("a corrupted address", MustParseFullCase{
+		Input:    "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7O32H",
+		FullCase: BeNil(),
+		FuncCase: Panic(),
+	}),
+	Entry("a valid seed", MustParseFullCase{
+		Input:    "SDHOAMBNLGCE2MV5ZKIVZAQD3VCLGP53P3OBSBI6UN5L5XZI5TKHFQL4",
+		FullCase: Equal(&Full{seed: "SDHOAMBNLGCE2MV5ZKIVZAQD3VCLGP53P3OBSBI6UN5L5XZI5TKHFQL4"}),
+		FuncCase: Not(Panic()),
+	}),
+	Entry("a corrupted seed", MustParseFullCase{
+		Input:    "SDHOAMBNLGCE2MV5ZKIVZAQD3VCLGP53P3OBSBI6UN5L5XZI5TKHFQL3",
+		FullCase: BeNil(),
+		FuncCase: Panic(),
+	}),
+	Entry("a blank string", MustParseFullCase{
+		Input:    "",
+		FullCase: BeNil(),
+		FuncCase: Panic(),
+	}),
+)
+
+type ParseAddressCase struct {
+	Input       string
+	AddressCase types.GomegaMatcher
+	ErrCase     types.GomegaMatcher
+}
+
+var _ = DescribeTable("keypair.ParseAddress()",
+	func(c ParseAddressCase) {
+		kp, err := ParseAddress(c.Input)
+
+		Expect(kp).To(c.AddressCase)
+		Expect(err).To(c.ErrCase)
+	},
+
+	Entry("a valid address", ParseAddressCase{
+		Input:       "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H",
+		AddressCase: Equal(&FromAddress{address: "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H"}),
+		ErrCase:     BeNil(),
+	}),
+	Entry("a corrupted address", ParseAddressCase{
+		Input:       "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7O32H",
+		AddressCase: BeNil(),
+		ErrCase:     HaveOccurred(),
+	}),
+	Entry("a valid seed", ParseAddressCase{
+		Input:       "SDHOAMBNLGCE2MV5ZKIVZAQD3VCLGP53P3OBSBI6UN5L5XZI5TKHFQL4",
+		AddressCase: BeNil(),
+		ErrCase:     HaveOccurred(),
+	}),
+	Entry("a corrupted seed", ParseAddressCase{
+		Input:       "SDHOAMBNLGCE2MV5ZKIVZAQD3VCLGP53P3OBSBI6UN5L5XZI5TKHFQL3",
+		AddressCase: BeNil(),
+		ErrCase:     HaveOccurred(),
+	}),
+	Entry("a blank string", ParseAddressCase{
+		Input:       "",
+		AddressCase: BeNil(),
+		ErrCase:     HaveOccurred(),
+	}),
+)
+
+type MustParseAddressCase struct {
+	Input       string
+	AddressCase types.GomegaMatcher
+	FuncCase    types.GomegaMatcher
+}
+
+var _ = DescribeTable("keypair.MustParseAddress()",
+	func(c MustParseAddressCase) {
+		f := func() {
+			kp := MustParseAddress(c.Input)
+			Expect(kp).To(c.AddressCase)
+		}
+		Expect(f).To(c.FuncCase)
+	},
+
+	Entry("a valid address", MustParseAddressCase{
+		Input:       "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H",
+		AddressCase: Equal(&FromAddress{address: "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H"}),
+		FuncCase:    Not(Panic()),
+	}),
+	Entry("a corrupted address", MustParseAddressCase{
+		Input:    "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7O32H",
+		FuncCase: Panic(),
+	}),
+	Entry("a valid seed", MustParseAddressCase{
+		Input:    "SDHOAMBNLGCE2MV5ZKIVZAQD3VCLGP53P3OBSBI6UN5L5XZI5TKHFQL4",
+		FuncCase: Panic(),
+	}),
+	Entry("a corrupted seed", MustParseAddressCase{
+		Input:    "SDHOAMBNLGCE2MV5ZKIVZAQD3VCLGP53P3OBSBI6UN5L5XZI5TKHFQL3",
+		FuncCase: Panic(),
+	}),
+	Entry("a blank string", MustParseAddressCase{
+		Input:    "",
+		FuncCase: Panic(),
+	}),
+)
+
+var _ = Describe("keypair.Random()", func() {
+	It("does not return the same value twice", func() {
+		seen := map[string]bool{}
+		for i := 0; i < 1000; i++ {
+			kp, err := Random()
+			Expect(err).To(BeNil())
+			seed := kp.Seed()
+			Expect(seen).ToNot(ContainElement(seed))
+			seen[seed] = true
+		}
+	})
+})
+
+type errReader struct {
+	Err error
+}
+
+func (r errReader) Read(_ []byte) (n int, err error) {
+	return 0, r.Err
+}
+
+var _ = Describe("keypair.MustRandom()", func() {
+	It("does not return the same value twice", func() {
+		seen := map[string]bool{}
+		for i := 0; i < 1000; i++ {
+			kp := MustRandom()
+			seed := kp.Seed()
+			Expect(seen).ToNot(ContainElement(seed))
+			seen[seed] = true
+		}
+	})
+
+	Describe("when error", func() {
+		var originalRandReader io.Reader
+		BeforeEach(func() {
+			originalRandReader = rand.Reader
+			rand.Reader = errReader{Err: errors.New("an error")}
+		})
+		AfterEach(func() {
+			rand.Reader = originalRandReader
+		})
+		It("panics", func() {
+			defer func() {
+				r := recover()
+				Expect(r).ToNot(BeNil())
+				Expect(r).To(Equal(errors.New("an error")))
+			}()
+			MustRandom()
+		})
+	})
+})

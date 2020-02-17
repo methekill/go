@@ -1,9 +1,10 @@
 package keypair
 
 import (
-	"github.com/agl/ed25519"
 	"github.com/stellar/go/strkey"
 	"github.com/stellar/go/xdr"
+
+	"golang.org/x/crypto/ed25519"
 )
 
 // FromAddress represents a keypair to which only the address is know.  This KP
@@ -20,6 +21,12 @@ func (kp *FromAddress) Address() string {
 	return kp.address
 }
 
+// FromAddress gets the address-only representation, or public key, of this
+// keypair, which is itself.
+func (kp *FromAddress) FromAddress() *FromAddress {
+	return kp
+}
+
 func (kp *FromAddress) Hint() (r [4]byte) {
 	copy(r[:], kp.publicKey()[28:])
 	return
@@ -29,11 +36,7 @@ func (kp *FromAddress) Verify(input []byte, sig []byte) error {
 	if len(sig) != 64 {
 		return ErrInvalidSignature
 	}
-
-	var asig [64]byte
-	copy(asig[:], sig[:])
-
-	if !ed25519.Verify(kp.publicKey(), input, &asig) {
+	if !ed25519.Verify(kp.publicKey(), input, sig) {
 		return ErrInvalidSignature
 	}
 	return nil
@@ -43,15 +46,14 @@ func (kp *FromAddress) Sign(input []byte) ([]byte, error) {
 	return nil, ErrCannotSign
 }
 
+func (kp *FromAddress) SignBase64(input []byte) (string, error) {
+	return "", ErrCannotSign
+}
+
 func (kp *FromAddress) SignDecorated(input []byte) (xdr.DecoratedSignature, error) {
 	return xdr.DecoratedSignature{}, ErrCannotSign
 }
 
-func (kp *FromAddress) publicKey() *[32]byte {
-	bytes := strkey.MustDecode(strkey.VersionByteAccountID, kp.address)
-	var result [32]byte
-
-	copy(result[:], bytes)
-
-	return &result
+func (kp *FromAddress) publicKey() ed25519.PublicKey {
+	return ed25519.PublicKey(strkey.MustDecode(strkey.VersionByteAccountID, kp.address))
 }

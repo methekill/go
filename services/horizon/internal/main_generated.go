@@ -4,12 +4,6 @@ import (
 	"net/http"
 )
 
-func (action AccountShowAction) Handle(w http.ResponseWriter, r *http.Request) {
-	ap := &action.Action
-	ap.Prepare(w, r)
-	ap.Execute(&action)
-}
-
 func (action AssetsAction) Handle(w http.ResponseWriter, r *http.Request) {
 	ap := &action.Action
 	ap.Prepare(w, r)
@@ -64,6 +58,12 @@ func (action OffersByAccountAction) Handle(w http.ResponseWriter, r *http.Reques
 	ap.Execute(&action)
 }
 
+func (action FeeStatsAction) Handle(w http.ResponseWriter, r *http.Request) {
+	ap := &action.Action
+	ap.Prepare(w, r)
+	ap.Execute(&action)
+}
+
 func (action OperationIndexAction) Handle(w http.ResponseWriter, r *http.Request) {
 	ap := &action.Action
 	ap.Prepare(w, r)
@@ -77,18 +77,6 @@ func (action OperationShowAction) Handle(w http.ResponseWriter, r *http.Request)
 }
 
 func (action OrderBookShowAction) Handle(w http.ResponseWriter, r *http.Request) {
-	ap := &action.Action
-	ap.Prepare(w, r)
-	ap.Execute(&action)
-}
-
-func (action PathIndexAction) Handle(w http.ResponseWriter, r *http.Request) {
-	ap := &action.Action
-	ap.Prepare(w, r)
-	ap.Execute(&action)
-}
-
-func (action PaymentsIndexAction) Handle(w http.ResponseWriter, r *http.Request) {
 	ap := &action.Action
 	ap.Prepare(w, r)
 	ap.Execute(&action)
@@ -119,18 +107,6 @@ func (action TradeIndexAction) Handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (action TransactionCreateAction) Handle(w http.ResponseWriter, r *http.Request) {
-	ap := &action.Action
-	ap.Prepare(w, r)
-	ap.Execute(&action)
-}
-
-func (action TransactionIndexAction) Handle(w http.ResponseWriter, r *http.Request) {
-	ap := &action.Action
-	ap.Prepare(w, r)
-	ap.Execute(&action)
-}
-
-func (action TransactionShowAction) Handle(w http.ResponseWriter, r *http.Request) {
 	ap := &action.Action
 	ap.Prepare(w, r)
 	ap.Execute(&action)

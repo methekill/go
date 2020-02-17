@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/segmentio/go-loggly"
+	loggly "github.com/segmentio/go-loggly"
 	"github.com/sirupsen/logrus"
 )
 
@@ -42,12 +42,14 @@ type LogglyHook struct {
 func New() *Entry {
 	l := logrus.New()
 	l.Level = logrus.WarnLevel
+	l.Formatter.(*logrus.TextFormatter).FullTimestamp = true
+	l.Formatter.(*logrus.TextFormatter).TimestampFormat = "2006-01-02T15:04:05.000Z07:00"
 	return &Entry{Entry: *logrus.NewEntry(l).WithField("pid", os.Getpid())}
 }
 
 // Set establishes a new context to which the provided sub-logger is bound
 func Set(parent context.Context, logger *Entry) context.Context {
-	return context.WithValue(parent, &contextKey, logger)
+	return context.WithValue(parent, &loggerContextKey, logger)
 }
 
 // Ctx returns the logger bound to the provided context, otherwise
@@ -57,7 +59,7 @@ func Ctx(ctx context.Context) *Entry {
 		return DefaultLogger
 	}
 
-	found := ctx.Value(&contextKey)
+	found := ctx.Value(&loggerContextKey)
 	if found == nil {
 		return DefaultLogger
 	}
@@ -133,6 +135,16 @@ func Error(args ...interface{}) {
 	DefaultLogger.Error(args...)
 }
 
+// Fatalf logs a message at the Fatal severity.
+func Fatalf(format string, args ...interface{}) {
+	DefaultLogger.Fatalf(format, args...)
+}
+
+// Fatal logs a message at the Fatal severity.
+func Fatal(args ...interface{}) {
+	DefaultLogger.Fatal(args...)
+}
+
 // Panicf logs a message at the Panic severity.
 func Panicf(format string, args ...interface{}) {
 	DefaultLogger.Panicf(format, args...)
@@ -145,11 +157,13 @@ func Panic(args ...interface{}) {
 
 // StartTest shifts the default logger into "test" mode.  See Entry's
 // documentation for the StartTest() method for more info.
-func StartTest(level logrus.Level) func() []*logrus.Entry {
+func StartTest(level logrus.Level) func() []logrus.Entry {
 	return DefaultLogger.StartTest(level)
 }
 
-var contextKey = 0
+type contextKey string
+
+var loggerContextKey = contextKey("logger")
 
 func init() {
 	DefaultLogger = New()

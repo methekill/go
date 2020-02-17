@@ -3,14 +3,13 @@ package resourceadapter
 import (
 	"context"
 
+	protocol "github.com/stellar/go/protocols/horizon"
 	"github.com/stellar/go/services/horizon/internal/txsub"
-	. "github.com/stellar/go/protocols/horizon"
-
 )
 
 // Populate fills out the details
 func PopulateTransactionResultCodes(ctx context.Context,
-	dest *TransactionResultCodes,
+	dest *protocol.TransactionResultCodes,
 	fail *txsub.FailedTransactionError,
 ) (err error) {
 

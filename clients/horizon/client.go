@@ -13,12 +13,16 @@ import (
 	"strings"
 
 	"github.com/manucorporat/sse"
+	"github.com/stellar/go/support/app"
 	"github.com/stellar/go/support/errors"
 	"github.com/stellar/go/xdr"
 )
 
+const clientName = "go-stellar-sdk-old"
+
 // HomeDomainForAccount returns the home domain for the provided strkey-encoded
 // account id.
+// Deprecated: use clients/horizonclient instead
 func (c *Client) HomeDomainForAccount(aid string) (string, error) {
 	a, err := c.LoadAccount(aid)
 	if err != nil {
@@ -34,9 +38,10 @@ func (c *Client) fixURL() {
 }
 
 // Root loads the root endpoint of horizon
+// Deprecated: use clients/horizonclient instead
 func (c *Client) Root() (root Root, err error) {
 	c.fixURLOnce.Do(c.fixURL)
-	resp, err := c.HTTP.Get(c.URL)
+	resp, err := c.getRequest(c.URL)
 	if err != nil {
 		return
 	}
@@ -47,9 +52,10 @@ func (c *Client) Root() (root Root, err error) {
 
 // LoadAccount loads the account state from horizon. err can be either error
 // object or horizon.Error object.
+// Deprecated: use horizonclient.AccountDetail instead
 func (c *Client) LoadAccount(accountID string) (account Account, err error) {
 	c.fixURLOnce.Do(c.fixURL)
-	resp, err := c.HTTP.Get(c.URL + "/accounts/" + accountID)
+	resp, err := c.getRequest(c.URL + "/accounts/" + accountID)
 	if err != nil {
 		return
 	}
@@ -60,6 +66,7 @@ func (c *Client) LoadAccount(accountID string) (account Account, err error) {
 
 // LoadAccountOffers loads the account offers from horizon. err can be either
 // error object or horizon.Error object.
+// Deprecated: use horizonclient.Offers instead
 func (c *Client) LoadAccountOffers(
 	accountID string,
 	params ...interface{},
@@ -100,7 +107,7 @@ func (c *Client) LoadAccountOffers(
 		return
 	}
 
-	resp, err := c.HTTP.Get(endpoint)
+	resp, err := c.getRequest(endpoint)
 	if err != nil {
 		err = errors.Wrap(err, "failed to load endpoint")
 		return
@@ -111,6 +118,7 @@ func (c *Client) LoadAccountOffers(
 }
 
 // LoadTradeAggregations loads the trade aggregation from horizon.
+// Deprecated: use horizonclient.TradeAggregations instead
 func (c *Client) LoadTradeAggregations(
 	baseAsset Asset,
 	counterAsset Asset,
@@ -159,7 +167,7 @@ func (c *Client) LoadTradeAggregations(
 		return
 	}
 
-	resp, err := c.HTTP.Get(endpoint)
+	resp, err := c.getRequest(endpoint)
 	if err != nil {
 		err = errors.Wrap(err, "failed to load endpoint")
 		return
@@ -170,6 +178,7 @@ func (c *Client) LoadTradeAggregations(
 }
 
 // LoadTrades loads the /trades endpoint from horizon.
+// Deprecated: use horizonclient.Trades instead
 func (c *Client) LoadTrades(
 	baseAsset Asset,
 	counterAsset Asset,
@@ -213,7 +222,7 @@ func (c *Client) LoadTrades(
 		return
 	}
 
-	resp, err := c.HTTP.Get(endpoint)
+	resp, err := c.getRequest(endpoint)
 	if err != nil {
 		err = errors.Wrap(err, "failed to load endpoint")
 		return
@@ -224,9 +233,10 @@ func (c *Client) LoadTrades(
 }
 
 // LoadTransaction loads a single transaction from Horizon server
+// Deprecated: use horizonclient.TransactionDetail instead
 func (c *Client) LoadTransaction(transactionID string) (transaction Transaction, err error) {
 	c.fixURLOnce.Do(c.fixURL)
-	resp, err := c.HTTP.Get(c.URL + "/transactions/" + transactionID)
+	resp, err := c.getRequest(c.URL + "/transactions/" + transactionID)
 	if err != nil {
 		return
 	}
@@ -245,10 +255,51 @@ func addAssetToQuery(v map[string][]string, assetPrefix string, asset Asset) {
 	}
 }
 
+// Deprecated: use horizonclient.Transactions instead
+func (c *Client) LoadAccountTransactions(accountID string, params ...interface{}) (TransactionsPage, error) {
+	tx := TransactionsPage{}
+
+	c.fixURLOnce.Do(c.fixURL)
+	query := url.Values{}
+
+	for _, param := range params {
+		switch param := param.(type) {
+		case Limit:
+			query.Add("limit", strconv.Itoa(int(param)))
+		case Order:
+			query.Add("order", string(param))
+		case Cursor:
+			query.Add("cursor", string(param))
+		default:
+			return tx, errors.Errorf("Undefined parameter (%T): %+v", param, param)
+		}
+	}
+
+	endpoint := fmt.Sprintf("%s/accounts/%s/transactions?%s", c.URL, accountID, query.Encode())
+
+	// ensure our endpoint is a real url
+	_, err := url.Parse(endpoint)
+	if err != nil {
+		return tx, errors.Wrap(err, "parsing endpoint")
+	}
+
+	resp, err := c.getRequest(endpoint)
+	if err != nil {
+		return tx, errors.Wrap(err, "loading endpoint")
+	}
+
+	err = decodeResponse(resp, &tx)
+	if err != nil {
+		return tx, errors.Wrap(err, "decoding response to transaction")
+	}
+	return tx, nil
+}
+
 // LoadOperation loads a single operation from Horizon server
+// Deprecated: use horizonclient.OperationDetail instead
 func (c *Client) LoadOperation(operationID string) (payment Payment, err error) {
 	c.fixURLOnce.Do(c.fixURL)
-	resp, err := c.HTTP.Get(c.URL + "/operations/" + operationID)
+	resp, err := c.getRequest(c.URL + "/operations/" + operationID)
 	if err != nil {
 		return
 	}
@@ -258,8 +309,9 @@ func (c *Client) LoadOperation(operationID string) (payment Payment, err error) 
 }
 
 // LoadMemo loads memo for a transaction in Payment
+// Deprecated: use clients/horizonclient instead
 func (c *Client) LoadMemo(p *Payment) (err error) {
-	res, err := c.HTTP.Get(p.Links.Transaction.Href)
+	res, err := c.getRequest(p.Links.Transaction.Href)
 	if err != nil {
 		return errors.Wrap(err, "load transaction failed")
 	}
@@ -268,18 +320,19 @@ func (c *Client) LoadMemo(p *Payment) (err error) {
 }
 
 // LoadAccountMergeAmount loads `account_merge` operation amount from it's effects
+// Deprecated: use clients/horizonclient instead
 func (c *Client) LoadAccountMergeAmount(p *Payment) error {
 	if p.Type != "account_merge" {
 		return errors.New("Not `account_merge` operation")
 	}
 
-	res, err := c.HTTP.Get(p.Links.Effects.Href)
+	res, err := c.getRequest(p.Links.Effects.Href)
 	if err != nil {
 		return errors.Wrap(err, "Error getting effects for operation")
 	}
 	defer res.Body.Close()
 	var page EffectsPage
-	err = json.NewDecoder(res.Body).Decode(&page)
+	err = decodeResponse(res, &page)
 	if err != nil {
 		return errors.Wrap(err, "Error decoding effects page")
 	}
@@ -295,6 +348,7 @@ func (c *Client) LoadAccountMergeAmount(p *Payment) error {
 }
 
 // SequenceForAccount implements build.SequenceProvider
+// Deprecated: use clients/horizonclient instead
 func (c *Client) SequenceForAccount(
 	accountID string,
 ) (xdr.SequenceNumber, error) {
@@ -313,6 +367,7 @@ func (c *Client) SequenceForAccount(
 }
 
 // LoadOrderBook loads order book for given selling and buying assets.
+// Deprecated: use horizonclient.OrderBook instead
 func (c *Client) LoadOrderBook(
 	selling Asset,
 	buying Asset,
@@ -339,7 +394,7 @@ func (c *Client) LoadOrderBook(
 		}
 	}
 
-	resp, err := c.HTTP.Get(c.URL + "/order_book?" + query.Encode())
+	resp, err := c.getRequest(c.URL + "/order_book?" + query.Encode())
 	if err != nil {
 		return
 	}
@@ -364,14 +419,18 @@ func (c *Client) stream(
 	for {
 		req, err := http.NewRequest("GET", fmt.Sprintf("%s?%s", baseURL, query.Encode()), nil)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Error creating HTTP request")
 		}
 		req.Header.Set("Accept", "text/event-stream")
+		c.setClientAppHeaders(req)
 
 		// Make sure we don't use c.HTTP that can have Timeout set.
 		resp, err := client.Do(req)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Error sending HTTP request")
+		}
+		if resp.StatusCode/100 != 2 {
+			return fmt.Errorf("Got bad HTTP status code %d", resp.StatusCode)
 		}
 		defer resp.Body.Close()
 
@@ -399,9 +458,16 @@ func (c *Client) stream(
 
 				line, err := reader.ReadString('\n')
 				if err != nil {
-					if err == io.EOF {
-						// Currently Horizon appends a new line after the last event so this is not really
-						// needed. We have this code here in case this behaviour is changed in a future.
+					if err == io.EOF || err == io.ErrUnexpectedEOF {
+						// We catch EOF errors to handle two possible situations:
+						// - The last line before closing the stream was not empty. This should never
+						//   happen in Horizon as it always sends an empty line after each event.
+						// - The stream was closed by the server/proxy because the connection was idle.
+						//
+						// In the former case, that (again) should never happen in Horizon, we need to
+						// check if there are any events we need to decode. We do this in the `if`
+						// statement below just in case if Horizon behaviour changes in a future.
+						//
 						// From spec:
 						// > Once the end of the file is reached, the user agent must dispatch the
 						// > event one final time, as defined below.
@@ -409,7 +475,7 @@ func (c *Client) stream(
 							break Events
 						}
 					} else {
-						return err
+						return errors.Wrap(err, "Error reading line")
 					}
 				}
 
@@ -424,7 +490,7 @@ func (c *Client) stream(
 
 			events, err := sse.Decode(strings.NewReader(buffer.String()))
 			if err != nil {
-				return err
+				return errors.Wrap(err, "Error decoding event")
 			}
 
 			// Right now len(events) should always be 1. This loop will be helpful after writing
@@ -442,8 +508,10 @@ func (c *Client) stream(
 				switch data := event.Data.(type) {
 				case string:
 					err = handler([]byte(data))
+					err = errors.Wrap(err, "Handler error")
 				case []byte:
 					err = handler(data)
+					err = errors.Wrap(err, "Handler error")
 				default:
 					err = errors.New("Invalid event.Data type")
 				}
@@ -457,6 +525,7 @@ func (c *Client) stream(
 
 // StreamLedgers streams incoming ledgers. Use context.WithCancel to stop streaming or
 // context.Background() if you want to stream indefinitely.
+// Deprecated: use horizonclient.StreamLedgers instead
 func (c *Client) StreamLedgers(
 	ctx context.Context,
 	cursor *Cursor,
@@ -475,8 +544,9 @@ func (c *Client) StreamLedgers(
 	})
 }
 
-// StreamPayments streams incoming payments. Use context.WithCancel to stop streaming or
-// context.Background() if you want to stream indefinitely.
+// StreamPayments streams payments, for which the given `accountID` was either the sender or receiver.
+// Use context.WithCancel to stop streaming or context.Background() if you want to stream indefinitely.
+// Deprecated: use horizonclient.StreamPayments instead
 func (c *Client) StreamPayments(
 	ctx context.Context,
 	accountID string,
@@ -498,6 +568,7 @@ func (c *Client) StreamPayments(
 
 // StreamTransactions streams incoming transactions. Use context.WithCancel to stop streaming or
 // context.Background() if you want to stream indefinitely.
+// Deprecated: use horizonclient.StreamTransactions instead
 func (c *Client) StreamTransactions(
 	ctx context.Context,
 	accountID string,
@@ -518,6 +589,7 @@ func (c *Client) StreamTransactions(
 }
 
 // SubmitTransaction submits a transaction to the network. err can be either error object or horizon.Error object.
+// Deprecated: use horizonclient.SubmitTransactionXDR instead
 func (c *Client) SubmitTransaction(
 	transactionEnvelopeXdr string,
 ) (response TransactionSuccess, err error) {
@@ -525,7 +597,7 @@ func (c *Client) SubmitTransaction(
 	v := url.Values{}
 	v.Set("tx", transactionEnvelopeXdr)
 
-	resp, err := c.HTTP.PostForm(c.URL+"/transactions", v)
+	resp, err := c.postRequest(c.URL+"/transactions", v)
 	if err != nil {
 		err = errors.Wrap(err, "http post failed")
 		return
@@ -544,4 +616,37 @@ func (c *Client) SubmitTransaction(
 	}
 
 	return
+}
+
+func (c *Client) getRequest(url string) (resp *http.Response, err error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		// return raw error here to simulate previous call to c.HTTP.Get
+		return nil, err
+	}
+	c.setClientAppHeaders(req)
+
+	return c.HTTP.Do(req)
+}
+
+func (c *Client) postRequest(url string, data url.Values) (resp *http.Response, err error) {
+	body := strings.NewReader(data.Encode())
+	req, err := http.NewRequest(http.MethodPost, url, body)
+	if err != nil {
+		// return raw error here to simulate previous call to c.HTTP.PostForm
+		return nil, err
+	}
+	c.setClientAppHeaders(req)
+
+	// set on c.HTTP.Post, called internally by c.HTTP.PostForm
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	return c.HTTP.Do(req)
+}
+
+func (c *Client) setClientAppHeaders(req *http.Request) {
+	req.Header.Set("X-Client-Name", clientName)
+	req.Header.Set("X-Client-Version", app.Version())
+	req.Header.Set("X-App-Name", c.AppName)
+	req.Header.Set("X-App-Version", c.AppVersion)
 }

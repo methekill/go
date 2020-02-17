@@ -7,12 +7,56 @@ import (
 	"github.com/stellar/go/xdr"
 )
 
-// AssetsForAddress loads `dest` as `[]xdr.Asset` with every asset the account
-// at `addy` can hold.
-func (q *Q) AssetsForAddress(dest interface{}, addy string) error {
+func (tl Trustline) IsAuthorized() bool {
+	return (tl.Flags & int32(xdr.TrustLineFlagsAuthorizedFlag)) != 0
+}
+
+// AssetsForAddress returns a list of assets and balances for those assets held by
+// a given address.
+func (q *Q) AssetsForAddress(addy string) ([]xdr.Asset, []xdr.Int64, error) {
+	var tls []Trustline
+	var account Account
+
+	if err := q.AccountByAddress(&account, addy); q.NoRows(err) {
+		// if there is no account for the given address then
+		// we return an empty list of assets and balances
+		return []xdr.Asset{}, []xdr.Int64{}, nil
+	} else if err != nil {
+		return nil, nil, err
+	}
+
+	if err := q.TrustlinesByAddress(&tls, addy); err != nil {
+		return nil, nil, err
+	}
+
+	assets := make([]xdr.Asset, len(tls)+1)
+	balances := make([]xdr.Int64, len(tls)+1)
+
+	var err error
+	for i, tl := range tls {
+		assets[i], err = AssetFromDB(tl.Assettype, tl.Assetcode, tl.Issuer)
+		if err != nil {
+			return nil, nil, err
+		}
+		balances[i] = tl.Balance
+	}
+
+	assets[len(assets)-1], err = xdr.NewAsset(xdr.AssetTypeAssetTypeNative, nil)
+	balances[len(assets)-1] = account.Balance
+
+	return assets, balances, err
+}
+
+// AllAssets loads all (unique) assets from core DB
+func (q *Q) AllAssets(dest interface{}) error {
 	var tls []Trustline
 
-	err := q.TrustlinesByAddress(&tls, addy)
+	sql := sq.Select(
+		"tl.assettype",
+		"tl.issuer",
+		"tl.assetcode",
+	).From("trustlines tl").GroupBy("(tl.assettype, tl.issuer, tl.assetcode)")
+	err := q.Select(&tls, sql)
 	if err != nil {
 		return err
 	}
@@ -22,7 +66,7 @@ func (q *Q) AssetsForAddress(dest interface{}, addy string) error {
 		return errors.New("Invalid destination")
 	}
 
-	result := make([]xdr.Asset, len(tls)+1)
+	result := make([]xdr.Asset, len(tls))
 	*dtl = result
 
 	for i, tl := range tls {
@@ -32,9 +76,7 @@ func (q *Q) AssetsForAddress(dest interface{}, addy string) error {
 		}
 	}
 
-	result[len(result)-1], err = xdr.NewAsset(xdr.AssetTypeAssetTypeNative, nil)
-
-	return err
+	return nil
 }
 
 // TrustlinesByAddress loads all trustlines for `addy`
@@ -71,5 +113,11 @@ var selectTrustline = sq.Select(
 	"tl.tlimit",
 	"tl.balance",
 	"tl.flags",
+	"tl.lastmodified",
+	// Liabilities can be NULL so can error without `coalesce`:
+	// `Invalid value for xdr.Int64`
+	"coalesce(tl.buyingliabilities, 0) as buyingliabilities",
+	"coalesce(tl.sellingliabilities, 0) as sellingliabilities",
 ).From("trustlines tl")
+
 var selectBalances = sq.Select("COUNT(*)", "COALESCE(SUM(balance), 0) as sum").From("trustlines")

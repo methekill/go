@@ -36,7 +36,7 @@ var _ = Describe("ManageOffer", func() {
 					Expect(builder.MO.Amount).To(Equal(xdr.Int64(200000000)))
 
 					Expect(builder.MO.Selling.Type).To(Equal(xdr.AssetTypeAssetTypeCreditAlphanum4))
-					Expect(builder.MO.Selling.AlphaNum4.AssetCode).To(Equal([4]byte{'E', 'U', 'R', 0}))
+					Expect(builder.MO.Selling.AlphaNum4.AssetCode).To(Equal(xdr.AssetCode4{'E', 'U', 'R', 0}))
 					var aid xdr.AccountId
 					aid.SetAddress(rate.Selling.Issuer)
 					Expect(builder.MO.Selling.AlphaNum4.Issuer.MustEd25519()).To(Equal(aid.MustEd25519()))
@@ -49,7 +49,7 @@ var _ = Describe("ManageOffer", func() {
 					Expect(builder.MO.Price.N).To(Equal(xdr.Int32(8253)))
 					Expect(builder.MO.Price.D).To(Equal(xdr.Int32(200)))
 
-					Expect(builder.MO.OfferId).To(Equal(xdr.Uint64(0)))
+					Expect(builder.MO.OfferId).To(Equal(xdr.Int64(0)))
 				})
 			})
 		})
@@ -62,7 +62,7 @@ var _ = Describe("ManageOffer", func() {
 					Expect(builder.MO.Amount).To(Equal(xdr.Int64(1000000000)))
 
 					Expect(builder.MO.Selling.Type).To(Equal(xdr.AssetTypeAssetTypeCreditAlphanum4))
-					Expect(builder.MO.Selling.AlphaNum4.AssetCode).To(Equal([4]byte{'E', 'U', 'R', 0}))
+					Expect(builder.MO.Selling.AlphaNum4.AssetCode).To(Equal(xdr.AssetCode4{'E', 'U', 'R', 0}))
 					var aid xdr.AccountId
 					aid.SetAddress(rate.Selling.Issuer)
 					Expect(builder.MO.Selling.AlphaNum4.Issuer.MustEd25519()).To(Equal(aid.MustEd25519()))
@@ -75,7 +75,7 @@ var _ = Describe("ManageOffer", func() {
 					Expect(builder.MO.Price.N).To(Equal(xdr.Int32(8253)))
 					Expect(builder.MO.Price.D).To(Equal(xdr.Int32(200)))
 
-					Expect(builder.MO.OfferId).To(Equal(xdr.Uint64(5)))
+					Expect(builder.MO.OfferId).To(Equal(xdr.Int64(5)))
 				})
 			})
 		})
@@ -88,7 +88,7 @@ var _ = Describe("ManageOffer", func() {
 					Expect(builder.MO.Amount).To(Equal(xdr.Int64(0)))
 
 					Expect(builder.MO.Selling.Type).To(Equal(xdr.AssetTypeAssetTypeCreditAlphanum4))
-					Expect(builder.MO.Selling.AlphaNum4.AssetCode).To(Equal([4]byte{'E', 'U', 'R', 0}))
+					Expect(builder.MO.Selling.AlphaNum4.AssetCode).To(Equal(xdr.AssetCode4{'E', 'U', 'R', 0}))
 					var aid xdr.AccountId
 					aid.SetAddress(rate.Selling.Issuer)
 					Expect(builder.MO.Selling.AlphaNum4.Issuer.MustEd25519()).To(Equal(aid.MustEd25519()))
@@ -101,7 +101,7 @@ var _ = Describe("ManageOffer", func() {
 					Expect(builder.MO.Price.N).To(Equal(xdr.Int32(8253)))
 					Expect(builder.MO.Price.D).To(Equal(xdr.Int32(200)))
 
-					Expect(builder.MO.OfferId).To(Equal(xdr.Uint64(10)))
+					Expect(builder.MO.OfferId).To(Equal(xdr.Int64(10)))
 				})
 			})
 		})
@@ -153,7 +153,7 @@ var _ = Describe("ManageOffer", func() {
 					Expect(builder.PO.Amount).To(Equal(xdr.Int64(200000000)))
 
 					Expect(builder.PO.Selling.Type).To(Equal(xdr.AssetTypeAssetTypeCreditAlphanum4))
-					Expect(builder.PO.Selling.AlphaNum4.AssetCode).To(Equal([4]byte{'E', 'U', 'R', 0}))
+					Expect(builder.PO.Selling.AlphaNum4.AssetCode).To(Equal(xdr.AssetCode4{'E', 'U', 'R', 0}))
 					var aid xdr.AccountId
 					aid.SetAddress(rate.Selling.Issuer)
 					Expect(builder.PO.Selling.AlphaNum4.Issuer.MustEd25519()).To(Equal(aid.MustEd25519()))

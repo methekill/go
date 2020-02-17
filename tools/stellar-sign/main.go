@@ -38,13 +38,15 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		file, err := os.Open(*infile)
+		var file *os.File
+		file, err = os.Open(*infile)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer file.Close()
 
-		raw, err := ioutil.ReadAll(file)
+		var raw []byte
+		raw, err = ioutil.ReadAll(file)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -99,12 +101,13 @@ func main() {
 }
 
 func readLine(prompt string, private bool) (string, error) {
-	fmt.Fprintf(os.Stdout, prompt)
+	fmt.Println(prompt)
 	var line string
 	var err error
 
 	if private {
-		str, err := gopass.GetPasswdMasked()
+		var str []byte
+		str, err = gopass.GetPasswdMasked()
 		if err != nil {
 			return "", err
 		}

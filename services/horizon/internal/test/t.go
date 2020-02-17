@@ -2,10 +2,14 @@ package test
 
 import (
 	"io"
+	"testing"
 
 	"encoding/json"
 
+	"github.com/jmoiron/sqlx"
+	"github.com/stellar/go/services/horizon/internal/db2/schema"
 	"github.com/stellar/go/services/horizon/internal/ledger"
+	"github.com/stellar/go/services/horizon/internal/operationfeestats"
 	"github.com/stellar/go/support/db"
 	"github.com/stellar/go/support/render/hal"
 )
@@ -24,6 +28,7 @@ func (t *T) Finish() {
 	RestoreLogger()
 	// Reset cached ledger state
 	ledger.SetState(ledger.State{})
+	operationfeestats.ResetState()
 
 	if t.LogBuffer.Len() > 0 {
 		t.T.Log("\n" + t.LogBuffer.String())
@@ -41,6 +46,7 @@ func (t *T) HorizonSession() *db.Session {
 
 // Scenario loads the named sql scenario into the database
 func (t *T) Scenario(name string) *T {
+	clearHorizonDB(t.T, t.HorizonDB)
 	LoadScenario(name)
 	t.UpdateLedgerState()
 	return t
@@ -49,8 +55,25 @@ func (t *T) Scenario(name string) *T {
 // ScenarioWithoutHorizon loads the named sql scenario into the database
 func (t *T) ScenarioWithoutHorizon(name string) *T {
 	LoadScenarioWithoutHorizon(name)
+	ResetHorizonDB(t.T, t.HorizonDB)
 	t.UpdateLedgerState()
 	return t
+}
+
+// ResetHorizonDB sets up a new horizon database with empty tables
+func ResetHorizonDB(t *testing.T, db *sqlx.DB) {
+	clearHorizonDB(t, db)
+	_, err := schema.Migrate(db.DB, schema.MigrateUp, 0)
+	if err != nil {
+		t.Fatalf("could not run migrations up on test db: %v", err)
+	}
+}
+
+func clearHorizonDB(t *testing.T, db *sqlx.DB) {
+	_, err := schema.Migrate(db.DB, schema.MigrateDown, 0)
+	if err != nil {
+		t.Fatalf("could not run migrations down on test db: %v", err)
+	}
 }
 
 // UnmarshalPage populates dest with the records contained in the json-encoded page in r
@@ -90,6 +113,18 @@ func (t *T) UnmarshalNext(r io.Reader) string {
 	return env.Links.Next.Href
 }
 
+// UnmarshalExtras extracts and returns extras content
+func (t *T) UnmarshalExtras(r io.Reader) map[string]string {
+	var resp struct {
+		Extras map[string]string `json:"extras"`
+	}
+
+	err := json.NewDecoder(r).Decode(&resp)
+	t.Require.NoError(err, "failed to decode page")
+
+	return resp.Extras
+}
+
 // UpdateLedgerState updates the cached ledger state (or panicing on failure).
 func (t *T) UpdateLedgerState() {
 	var next ledger.State
@@ -116,5 +151,4 @@ func (t *T) UpdateLedgerState() {
 	}
 
 	ledger.SetState(next)
-	return
 }

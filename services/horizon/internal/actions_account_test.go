@@ -8,23 +8,32 @@ import (
 )
 
 func TestAccountActions_Show(t *testing.T) {
-	ht := StartHTTPTest(t, "base")
+	ht := StartHTTPTest(t, "allow_trust")
 	defer ht.Finish()
 
 	// existing account
 	w := ht.Get(
-		"/accounts/GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H",
+		"/accounts/GCXKG6RN4ONIEPCMNFB732A436Z5PNDSRLGWK7GBLCMQLIFO4S7EYWVU",
 	)
 	if ht.Assert.Equal(200, w.Code) {
-
 		var result horizon.Account
 		err := json.Unmarshal(w.Body.Bytes(), &result)
 		ht.Require.NoError(err)
-		ht.Assert.Equal("3", result.Sequence)
+		ht.Assert.Equal("8589934593", result.Sequence)
+
+		ht.Assert.NotEqual(0, result.LastModifiedLedger)
+		for _, balance := range result.Balances {
+			if balance.Type == "native" {
+				ht.Assert.Equal(uint32(0), balance.LastModifiedLedger)
+				ht.Assert.Nil(balance.IsAuthorized)
+			} else {
+				ht.Assert.NotEqual(uint32(0), balance.LastModifiedLedger)
+			}
+		}
 	}
 
 	// missing account
-	w = ht.Get("/accounts/100")
+	w = ht.Get("/accounts/GDBAPLDCAEJV6LSEDFEAUDAVFYSNFRUYZ4X75YYJJMMX5KFVUOHX46SQ")
 	ht.Assert.Equal(404, w.Code)
 }
 
@@ -55,4 +64,15 @@ func TestAccountActions_ShowRegressions(t *testing.T) {
 	)
 	ht.Assert.Equal(200, w.Code)
 
+}
+
+func TestAccountActions_InvalidID(t *testing.T) {
+	ht := StartHTTPTest(t, "base")
+	defer ht.Finish()
+
+	// existing account
+	w := ht.Get(
+		"/accounts/=cr%FF%98%CB%F3%AF%E72%D85%FE%28%15y%8Fz%C4Ng%CE%98h%02%2A:%B6%FF%B9%CF%92%88O%91%10d&S%7C%9Bi%D4%CFI%28%CFo",
+	)
+	ht.Assert.Equal(400, w.Code)
 }

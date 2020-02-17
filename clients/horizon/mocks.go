@@ -41,9 +41,7 @@ func (m *MockClient) LoadAccountOffers(
 	//
 	// Go errors with: "too many arguments in call to m.Mock.Called"
 	args := []interface{}{accountID}
-	for _, param := range params {
-		args = append(args, param)
-	}
+	args = append(args, params...)
 	a := m.Called(args...)
 	return a.Get(0).(OffersPage), a.Error(1)
 }
@@ -105,6 +103,12 @@ func (m *MockClient) LoadOrderBook(
 func (m *MockClient) LoadTransaction(transactionID string) (transaction Transaction, err error) {
 	a := m.Called(transactionID)
 	return a.Get(0).(Transaction), a.Error(1)
+}
+
+// LoadAccountTransactions is a mocking a method
+func (m *MockClient) LoadAccountTransactions(accountId string, params ...interface{}) (transactionPage TransactionsPage, err error) {
+	a := m.Called(accountId)
+	return a.Get(0).(TransactionsPage), a.Error(1)
 }
 
 // SequenceForAccount is a mocking a method

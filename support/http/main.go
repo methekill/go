@@ -14,7 +14,6 @@ import (
 	"github.com/stellar/go/support/config"
 	"github.com/stellar/go/support/errors"
 	"github.com/stellar/go/support/log"
-	"golang.org/x/net/http2"
 	"gopkg.in/tylerb/graceful.v1"
 )
 
@@ -59,8 +58,6 @@ type Config struct {
 func Run(conf Config) {
 	srv := setup(conf)
 
-	http2.ConfigureServer(srv.Server, nil)
-
 	if conf.OnStarting != nil {
 		conf.OnStarting()
 	}
@@ -104,8 +101,9 @@ func setup(conf Config) *graceful.Server {
 		Timeout: timeout,
 
 		Server: &stdhttp.Server{
-			Addr:    conf.ListenAddr,
-			Handler: conf.Handler,
+			Addr:        conf.ListenAddr,
+			Handler:     conf.Handler,
+			ReadTimeout: 5 * time.Second,
 		},
 
 		ShutdownInitiated: func() {

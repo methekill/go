@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/agl/ed25519"
+	"golang.org/x/crypto/ed25519"
 )
 
 const (
@@ -31,7 +31,7 @@ var (
 	ErrInvalidPath        = errors.New("Invalid derivation path")
 	ErrNoPublicDerivation = errors.New("No public derivation for ed25519")
 
-	pathRegex = regexp.MustCompile("^m(\\/[0-9]+')+$")
+	pathRegex = regexp.MustCompile(`^m(\/[0-9]+')+$`)
 )
 
 type Key struct {

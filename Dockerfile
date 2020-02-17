@@ -1,11 +1,7 @@
-FROM golang:1.9
-RUN bash -c "curl https://glide.sh/get | sh"
+FROM golang:1.12
 WORKDIR /go/src/github.com/stellar/go
 
-COPY glide.lock /go/src/github.com/stellar/go
-COPY glide.yaml /go/src/github.com/stellar/go
-RUN glide install
-
 COPY . .
+ENV GO111MODULE=on
 RUN go install github.com/stellar/go/tools/...
 RUN go install github.com/stellar/go/services/...

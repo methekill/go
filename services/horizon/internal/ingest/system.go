@@ -1,25 +1,32 @@
 package ingest
 
 import (
+	"time"
+
 	"github.com/stellar/go/services/horizon/internal/db2/core"
 	"github.com/stellar/go/services/horizon/internal/db2/history"
 	herr "github.com/stellar/go/services/horizon/internal/errors"
 	"github.com/stellar/go/services/horizon/internal/ledger"
-	"github.com/stellar/go/services/horizon/internal/log"
-	"github.com/stellar/go/services/horizon/internal/toid"
 	"github.com/stellar/go/support/errors"
+	ilog "github.com/stellar/go/support/log"
 )
 
 // Backfill ingests history in reverse chronological order, from the current
 // horizon elder query for `n` ledgers
 func (i *System) Backfill(n uint) error {
-	start := ledger.CurrentState().HistoryElder
-	end := start - int32(n)
+	start := ledger.CurrentState().HistoryElder - 1
+	end := start - int32(n) + 1
 	is := NewSession(i)
 	is.Cursor = NewCursor(start, end, i)
-	is.ClearExisting = true
+
+	log.WithField("start", start).
+		WithField("end", end).
+		WithField("err", is.Err).
+		WithField("ingested", is.Ingested).
+		Info("ingest: backfill start")
 
 	is.Run()
+
 	log.WithField("start", start).
 		WithField("end", end).
 		WithField("err", is.Err).
@@ -32,7 +39,6 @@ func (i *System) Backfill(n uint) error {
 // ClearAll removes all previously ingested historical data from the horizon
 // database.
 func (i *System) ClearAll() error {
-
 	hdb := i.HorizonDB.Clone()
 	ingestion := &Ingestion{DB: hdb}
 
@@ -114,7 +120,6 @@ func (i *System) ReingestAll() (int, error) {
 
 // ReingestOutdated finds old ledgers and reimports them.
 func (i *System) ReingestOutdated() (n int, err error) {
-
 	q := history.Q{Session: i.HorizonDB}
 
 	// NOTE: this loop will never terminate if some bug were cause a ledger
@@ -226,8 +231,6 @@ func (i *System) runOnce() {
 		}
 	}()
 
-	ls := ledger.CurrentState()
-
 	// 1. stash a copy of the current ingestion session (assigned from the tick)
 	// 2. decide what to import
 	// 3. import until none available
@@ -243,107 +246,68 @@ func (i *System) runOnce() {
 		i.lock.Unlock()
 	}()
 
+	// Warning: do not check the current ledger state using ledger.CurrentState()! It is updated
+	// in another go routine and can return the same data for two different ingestion sessions.
+	var coreLatest, historyLatest int32
+
+	coreQ := core.Q{Session: i.CoreDB}
+	err := coreQ.LatestLedger(&coreLatest)
+	if err != nil {
+		log.WithFields(ilog.F{"err": err}).Error("Error getting core latest ledger")
+		return
+	}
+
+	historyQ := history.Q{Session: i.HorizonDB}
+	err = historyQ.LatestLedger(&historyLatest)
+	if err != nil {
+		log.WithFields(ilog.F{"err": err}).Error("Error getting history latest ledger")
+		return
+	}
+
 	if is == nil {
 		log.Warn("ingest: runOnce ran with a nil current session")
 		return
 	}
 
-	if ls.CoreLatest == 1 {
+	if coreLatest == 1 {
 		log.Warn("ingest: waiting for stellar-core sync")
 		return
 	}
 
-	if ls.HistoryLatest == ls.CoreLatest {
+	if historyLatest == coreLatest {
 		log.Debug("ingest: no new ledgers")
 		return
 	}
 
 	// 2.
-	if ls.HistoryLatest == 0 {
+	if historyLatest == 0 {
 		log.Infof(
 			"history db is empty, establishing base at ledger %d",
-			ls.CoreLatest,
+			coreLatest,
 		)
-		is.Cursor = NewCursor(ls.CoreLatest, ls.CoreLatest, i)
+		is.Cursor = NewCursor(coreLatest, coreLatest, i)
 	} else {
-		is.Cursor = NewCursor(ls.HistoryLatest+1, ls.CoreLatest, i)
+		is.Cursor = NewCursor(historyLatest+1, coreLatest, i)
 	}
 
 	// 3.
+	logFields := ilog.F{
+		"first_ledger": is.Cursor.FirstLedger,
+		"last_ledger":  is.Cursor.LastLedger,
+	}
+	log.WithFields(logFields).Info("Ingesting ledgers...")
+	ingestStart := time.Now()
+
 	is.Run()
 
 	if is.Err != nil {
-		log.Errorf("import session failed: %s", is.Err)
+		// We need to use `Error` method because `is.Err` is `withMessage` struct from
+		// `github.com/pkg/errors` and encodes to `{}` in the logs.
+		logFields["err"] = is.Err.Error()
+		log.WithFields(logFields).Error("Error ingesting ledgers")
+		return
 	}
 
-	return
-}
-
-// trimAbandondedLedgers deletes all "abandonded" ledgers from the history
-// database. An abandonded ledger, in this context, means a ledger known to
-// horizon but is no longer present in the stellar-core database source.  The
-// usual cause for this situation is a stellar-core that uses the CATCHUP_RECENT
-// mode.
-func (i *System) trimAbandondedLedgers() error {
-	var coreElder int32
-	cq := core.Q{Session: i.CoreDB}
-
-	err := cq.ElderLedger(&coreElder)
-	if err != nil {
-		return errors.Wrap(err, "load core elder ledger failed")
-	}
-
-	hdb := i.HorizonDB.Clone()
-	ingestion := &Ingestion{DB: hdb}
-
-	err = ingestion.Start()
-	if err != nil {
-		return errors.Wrap(err, "failed to begin ingestion")
-	}
-
-	end := toid.New(coreElder, 0, 0)
-
-	err = ingestion.Clear(0, end.ToInt64())
-	if err != nil {
-		return errors.Wrap(err, "failed to clear ingestion")
-	}
-
-	err = ingestion.Close()
-	if err != nil {
-		return errors.Wrap(err, "failed to close ingestion")
-	}
-
-	log.
-		WithField("new_elder_ledger", coreElder).
-		Infof("reingest: abandonded ledgers trimmed")
-
-	return nil
-}
-
-// validateLedgerChain helps to ensure the chain of ledger entries is contiguous
-// within horizon.  It ensures the ledger at `seq` is a child of `seq - 1`.
-func (i *System) validateLedgerChain(seq int32) error {
-	var (
-		cur  core.LedgerHeader
-		prev history.Ledger
-	)
-
-	cq := &core.Q{Session: i.CoreDB}
-	hq := &history.Q{Session: i.HorizonDB}
-
-	err := cq.LedgerHeaderBySequence(&cur, seq)
-	if err != nil {
-		return errors.Wrap(err, "validateLedgerChain: failed to load cur ledger")
-	}
-
-	err = hq.LedgerBySequence(&prev, seq-1)
-	if err != nil {
-		return errors.Wrap(err, "validateLedgerChain: failed to load prev ledger")
-	}
-
-	if cur.PrevHash != prev.LedgerHash {
-		return errors.New("cur and prev ledger hashes don't match")
-	}
-
-	return nil
+	logFields["duration"] = time.Since(ingestStart).Seconds()
+	log.WithFields(logFields).Info("Finished ingesting ledgers")
 }
