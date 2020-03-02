@@ -684,13 +684,13 @@ var accountResponse = `{
 var accountOffersResponse = `{
   "_links": {
     "self": {
-      "href": "https://horizon.stellar.org/accounts/GC2BQYBXFOVPRDH35D5HT2AFVCDGXJM5YVTAF5THFSAISYOWAJQKRESK/offers?order=asc\u0026limit=10\u0026cursor="
+      "href": "https://horizon.arunika.io/accounts/GC2BQYBXFOVPRDH35D5HT2AFVCDGXJM5YVTAF5THFSAISYOWAJQKRESK/offers?order=asc\u0026limit=10\u0026cursor="
     },
     "next": {
-      "href": "https://horizon.stellar.org/accounts/GC2BQYBXFOVPRDH35D5HT2AFVCDGXJM5YVTAF5THFSAISYOWAJQKRESK/offers?order=asc\u0026limit=10\u0026cursor=2539"
+      "href": "https://horizon.arunika.io/accounts/GC2BQYBXFOVPRDH35D5HT2AFVCDGXJM5YVTAF5THFSAISYOWAJQKRESK/offers?order=asc\u0026limit=10\u0026cursor=2539"
     },
     "prev": {
-      "href": "https://horizon.stellar.org/accounts/GC2BQYBXFOVPRDH35D5HT2AFVCDGXJM5YVTAF5THFSAISYOWAJQKRESK/offers?order=desc\u0026limit=10\u0026cursor=161"
+      "href": "https://horizon.arunika.io/accounts/GC2BQYBXFOVPRDH35D5HT2AFVCDGXJM5YVTAF5THFSAISYOWAJQKRESK/offers?order=desc\u0026limit=10\u0026cursor=161"
     }
   },
   "_embedded": {
@@ -698,10 +698,10 @@ var accountOffersResponse = `{
       {
         "_links": {
           "self": {
-            "href": "https://horizon.stellar.org/offers/161"
+            "href": "https://horizon.arunika.io/offers/161"
           },
           "offer_maker": {
-            "href": "https://horizon.stellar.org/accounts/GC2BQYBXFOVPRDH35D5HT2AFVCDGXJM5YVTAF5THFSAISYOWAJQKRESK"
+            "href": "https://horizon.arunika.io/accounts/GC2BQYBXFOVPRDH35D5HT2AFVCDGXJM5YVTAF5THFSAISYOWAJQKRESK"
           }
         },
         "id": 161,
@@ -725,10 +725,10 @@ var accountOffersResponse = `{
       {
         "_links": {
           "self": {
-            "href": "https://horizon.stellar.org/offers/2539"
+            "href": "https://horizon.arunika.io/offers/2539"
           },
           "offer_maker": {
-            "href": "https://horizon.stellar.org/accounts/GC2BQYBXFOVPRDH35D5HT2AFVCDGXJM5YVTAF5THFSAISYOWAJQKRESK"
+            "href": "https://horizon.arunika.io/accounts/GC2BQYBXFOVPRDH35D5HT2AFVCDGXJM5YVTAF5THFSAISYOWAJQKRESK"
           }
         },
         "id": 2539,
@@ -863,27 +863,27 @@ var accountTransactionsResponse = `{
 var transactionResponse = `{
   "_links": {
     "self": {
-      "href": "https://horizon.stellar.org/transactions/a4ca51d09610154409890763e2c8ecbaa36688c957dea1df0578bdbc1f65d312"
+      "href": "https://horizon.arunika.io/transactions/a4ca51d09610154409890763e2c8ecbaa36688c957dea1df0578bdbc1f65d312"
     },
     "account": {
-      "href": "https://horizon.stellar.org/accounts/GBQ352ACDO6DEGI42SOI4DCB654N7B7DANO4RSBGA5CZLM4475CQNID4"
+      "href": "https://horizon.arunika.io/accounts/GBQ352ACDO6DEGI42SOI4DCB654N7B7DANO4RSBGA5CZLM4475CQNID4"
     },
     "ledger": {
-      "href": "https://horizon.stellar.org/ledgers/17425656"
+      "href": "https://horizon.arunika.io/ledgers/17425656"
     },
     "operations": {
-      "href": "https://horizon.stellar.org/transactions/a4ca51d09610154409890763e2c8ecbaa36688c957dea1df0578bdbc1f65d312/operations{?cursor,limit,order}",
+      "href": "https://horizon.arunika.io/transactions/a4ca51d09610154409890763e2c8ecbaa36688c957dea1df0578bdbc1f65d312/operations{?cursor,limit,order}",
       "templated": true
     },
     "effects": {
-      "href": "https://horizon.stellar.org/transactions/a4ca51d09610154409890763e2c8ecbaa36688c957dea1df0578bdbc1f65d312/effects{?cursor,limit,order}",
+      "href": "https://horizon.arunika.io/transactions/a4ca51d09610154409890763e2c8ecbaa36688c957dea1df0578bdbc1f65d312/effects{?cursor,limit,order}",
       "templated": true
     },
     "precedes": {
-      "href": "https://horizon.stellar.org/transactions?order=asc&cursor=74842622631374848"
+      "href": "https://horizon.arunika.io/transactions?order=asc&cursor=74842622631374848"
     },
     "succeeds": {
-      "href": "https://horizon.stellar.org/transactions?order=desc&cursor=74842622631374848"
+      "href": "https://horizon.arunika.io/transactions?order=desc&cursor=74842622631374848"
     }
   },
   "id": "a4ca51d09610154409890763e2c8ecbaa36688c957dea1df0578bdbc1f65d312",

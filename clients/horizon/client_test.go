@@ -12,14 +12,14 @@ import (
 func TestClient(t *testing.T) {
 	h := httptest.NewClient()
 	horizonClient := &Client{
-		URL:  "https://horizon.stellar.org",
+		URL:  "https://horizon.arunika.io",
 		HTTP: h,
 	}
 
 	// happy path
 	h.On(
 		"GET",
-		"https://horizon.stellar.org/trades/?base_asset_type=native&counter_asset_code=SLT&counter_asset_issuer=GCKA6K5PCQ6PNF5RQBF7PQDJWRHO6UOGFMRLK3DYHDOI244V47XKQ4GP&counter_asset_type=credit_alphanum4&limit=3&offer_id=0&order=asc&resolution=300000",
+		"https://horizon.arunika.io/trades/?base_asset_type=native&counter_asset_code=SLT&counter_asset_issuer=GCKA6K5PCQ6PNF5RQBF7PQDJWRHO6UOGFMRLK3DYHDOI244V47XKQ4GP&counter_asset_type=credit_alphanum4&limit=3&offer_id=0&order=asc&resolution=300000",
 	).ReturnString(http.StatusOK, tradesNormalResponse)
 
 	trades, err := horizonClient.LoadTrades(
@@ -59,13 +59,13 @@ func TestClient(t *testing.T) {
 var tradesNormalResponse = `{
 "_links": {
 "self": {
-"href": "https://horizon.stellar.org/trades?base_asset_code=&base_asset_issuer=&base_asset_type=native&counter_asset_code=SLT&counter_asset_issuer=GCKA6K5PCQ6PNF5RQBF7PQDJWRHO6UOGFMRLK3DYHDOI244V47XKQ4GP&counter_asset_type=credit_alphanum4&cursor=&limit=3&offer_id=0&order=asc&resolution=300000"
+"href": "https://horizon.arunika.io/trades?base_asset_code=&base_asset_issuer=&base_asset_type=native&counter_asset_code=SLT&counter_asset_issuer=GCKA6K5PCQ6PNF5RQBF7PQDJWRHO6UOGFMRLK3DYHDOI244V47XKQ4GP&counter_asset_type=credit_alphanum4&cursor=&limit=3&offer_id=0&order=asc&resolution=300000"
 },
 "next": {
-"href": "https://horizon.stellar.org/trades?base_asset_code=&base_asset_issuer=&base_asset_type=native&counter_asset_code=SLT&counter_asset_issuer=GCKA6K5PCQ6PNF5RQBF7PQDJWRHO6UOGFMRLK3DYHDOI244V47XKQ4GP&counter_asset_type=credit_alphanum4&cursor=61560277354680321-0&limit=3&offer_id=0&order=asc&resolution=300000"
+"href": "https://horizon.arunika.io/trades?base_asset_code=&base_asset_issuer=&base_asset_type=native&counter_asset_code=SLT&counter_asset_issuer=GCKA6K5PCQ6PNF5RQBF7PQDJWRHO6UOGFMRLK3DYHDOI244V47XKQ4GP&counter_asset_type=credit_alphanum4&cursor=61560277354680321-0&limit=3&offer_id=0&order=asc&resolution=300000"
 },
 "prev": {
-"href": "https://horizon.stellar.org/trades?base_asset_code=&base_asset_issuer=&base_asset_type=native&counter_asset_code=SLT&counter_asset_issuer=GCKA6K5PCQ6PNF5RQBF7PQDJWRHO6UOGFMRLK3DYHDOI244V47XKQ4GP&counter_asset_type=credit_alphanum4&cursor=61557992432078849-0&limit=3&offer_id=0&order=desc&resolution=300000"
+"href": "https://horizon.arunika.io/trades?base_asset_code=&base_asset_issuer=&base_asset_type=native&counter_asset_code=SLT&counter_asset_issuer=GCKA6K5PCQ6PNF5RQBF7PQDJWRHO6UOGFMRLK3DYHDOI244V47XKQ4GP&counter_asset_type=credit_alphanum4&cursor=61557992432078849-0&limit=3&offer_id=0&order=desc&resolution=300000"
 }
 },
 "_embedded": {
@@ -76,13 +76,13 @@ var tradesNormalResponse = `{
 "href": ""
 },
 "base": {
-"href": "https://horizon.stellar.org/accounts/GAKLCFRTFDXKOEEUSBS23FBSUUVJRMDQHGCHNGGGJZQRK7BCPIMHUC4P"
+"href": "https://horizon.arunika.io/accounts/GAKLCFRTFDXKOEEUSBS23FBSUUVJRMDQHGCHNGGGJZQRK7BCPIMHUC4P"
 },
 "counter": {
-"href": "https://horizon.stellar.org/accounts/GAYDG77BFUUHYXC4IMFGXNBFDS5TMBB545Q6MON3EXYXHDOEJWU2LD2P"
+"href": "https://horizon.arunika.io/accounts/GAYDG77BFUUHYXC4IMFGXNBFDS5TMBB545Q6MON3EXYXHDOEJWU2LD2P"
 },
 "operation": {
-"href": "https://horizon.stellar.org/operations/61557992432078849"
+"href": "https://horizon.arunika.io/operations/61557992432078849"
 }
 },
 "id": "61557992432078849-0",
@@ -109,13 +109,13 @@ var tradesNormalResponse = `{
 "href": ""
 },
 "base": {
-"href": "https://horizon.stellar.org/accounts/GDHFBKVJO3VVQHPR56FV4YOILEGX3PYZBFNHVRJCDZTDULFPPWZHNNVL"
+"href": "https://horizon.arunika.io/accounts/GDHFBKVJO3VVQHPR56FV4YOILEGX3PYZBFNHVRJCDZTDULFPPWZHNNVL"
 },
 "counter": {
-"href": "https://horizon.stellar.org/accounts/GAYDG77BFUUHYXC4IMFGXNBFDS5TMBB545Q6MON3EXYXHDOEJWU2LD2P"
+"href": "https://horizon.arunika.io/accounts/GAYDG77BFUUHYXC4IMFGXNBFDS5TMBB545Q6MON3EXYXHDOEJWU2LD2P"
 },
 "operation": {
-"href": "https://horizon.stellar.org/operations/61560234405007361"
+"href": "https://horizon.arunika.io/operations/61560234405007361"
 }
 },
 "id": "61560234405007361-0",
@@ -142,13 +142,13 @@ var tradesNormalResponse = `{
 "href": ""
 },
 "base": {
-"href": "https://horizon.stellar.org/accounts/GDLHSCWRFUNEEJL6PR67OZL7QVO2L57MKQOMS6LGKNLGZPX6KCHXREMP"
+"href": "https://horizon.arunika.io/accounts/GDLHSCWRFUNEEJL6PR67OZL7QVO2L57MKQOMS6LGKNLGZPX6KCHXREMP"
 },
 "counter": {
-"href": "https://horizon.stellar.org/accounts/GAYDG77BFUUHYXC4IMFGXNBFDS5TMBB545Q6MON3EXYXHDOEJWU2LD2P"
+"href": "https://horizon.arunika.io/accounts/GAYDG77BFUUHYXC4IMFGXNBFDS5TMBB545Q6MON3EXYXHDOEJWU2LD2P"
 },
 "operation": {
-"href": "https://horizon.stellar.org/operations/61560277354680321"
+"href": "https://horizon.arunika.io/operations/61560277354680321"
 }
 },
 "id": "61560277354680321-0",

@@ -8,7 +8,7 @@ Horizon provides a RESTful API to allow client applications to interact with the
 SDF provides a [JavaScript SDK](https://www.stellar.org/developers/js-stellar-sdk/learn/index.html) for clients to use to interact with Horizon.
 
 SDF runs a instance of Horizon that is connected to the test net: [https://horizon-testnet.stellar.org/](https://horizon-testnet.stellar.org/) and one that is connected to the public Stellar network:
-[https://horizon.stellar.org/](https://horizon.stellar.org/).
+[https://horizon.arunika.io/](https://horizon.arunika.io/).
 
 ## Libraries
 

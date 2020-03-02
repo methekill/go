@@ -401,11 +401,11 @@ func TestOperationsRequest(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.IsType(t, ops, operations.OperationsPage{})
 		links := ops.Links
-		assert.Equal(t, links.Self.Href, "https://horizon.stellar.org/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53/operations?cursor=&limit=10&order=asc")
+		assert.Equal(t, links.Self.Href, "https://horizon.arunika.io/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53/operations?cursor=&limit=10&order=asc")
 
-		assert.Equal(t, links.Next.Href, "https://horizon.stellar.org/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53/operations?cursor=98447788659970049&limit=10&order=asc")
+		assert.Equal(t, links.Next.Href, "https://horizon.arunika.io/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53/operations?cursor=98447788659970049&limit=10&order=asc")
 
-		assert.Equal(t, links.Prev.Href, "https://horizon.stellar.org/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53/operations?cursor=98447788659970049&limit=10&order=desc")
+		assert.Equal(t, links.Prev.Href, "https://horizon.arunika.io/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53/operations?cursor=98447788659970049&limit=10&order=desc")
 
 		paymentOp := ops.Embedded.Records[0]
 		mangageOfferOp := ops.Embedded.Records[1]
@@ -1187,13 +1187,13 @@ var offersResponse = `{
 var multipleOpsResponse = `{
   "_links": {
     "self": {
-      "href": "https://horizon.stellar.org/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53/operations?cursor=&limit=10&order=asc"
+      "href": "https://horizon.arunika.io/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53/operations?cursor=&limit=10&order=asc"
     },
     "next": {
-      "href": "https://horizon.stellar.org/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53/operations?cursor=98447788659970049&limit=10&order=asc"
+      "href": "https://horizon.arunika.io/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53/operations?cursor=98447788659970049&limit=10&order=asc"
     },
     "prev": {
-      "href": "https://horizon.stellar.org/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53/operations?cursor=98447788659970049&limit=10&order=desc"
+      "href": "https://horizon.arunika.io/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53/operations?cursor=98447788659970049&limit=10&order=desc"
     }
   },
   "_embedded": {
@@ -1201,19 +1201,19 @@ var multipleOpsResponse = `{
       {
         "_links": {
           "self": {
-            "href": "https://horizon.stellar.org/operations/98447788659970049"
+            "href": "https://horizon.arunika.io/operations/98447788659970049"
           },
           "transaction": {
-            "href": "https://horizon.stellar.org/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53"
+            "href": "https://horizon.arunika.io/transactions/b63307ef92bb253df13361a72095156d19fc0713798bc2e6c3bd9ee63cc3ca53"
           },
           "effects": {
-            "href": "https://horizon.stellar.org/operations/98447788659970049/effects"
+            "href": "https://horizon.arunika.io/operations/98447788659970049/effects"
           },
           "succeeds": {
-            "href": "https://horizon.stellar.org/effects?order=desc&cursor=98447788659970049"
+            "href": "https://horizon.arunika.io/effects?order=desc&cursor=98447788659970049"
           },
           "precedes": {
-            "href": "https://horizon.stellar.org/effects?order=asc&cursor=98447788659970049"
+            "href": "https://horizon.arunika.io/effects?order=asc&cursor=98447788659970049"
           }
         },
         "id": "98447788659970049",
@@ -1234,19 +1234,19 @@ var multipleOpsResponse = `{
       {
         "_links": {
           "self": {
-            "href": "https://horizon.stellar.org/operations/98448467264811009"
+            "href": "https://horizon.arunika.io/operations/98448467264811009"
           },
           "transaction": {
-            "href": "https://horizon.stellar.org/transactions/af68055329e570bf461f384e2cd40db023be32f1c38a756ba2db08b6baf66148"
+            "href": "https://horizon.arunika.io/transactions/af68055329e570bf461f384e2cd40db023be32f1c38a756ba2db08b6baf66148"
           },
           "effects": {
-            "href": "https://horizon.stellar.org/operations/98448467264811009/effects"
+            "href": "https://horizon.arunika.io/operations/98448467264811009/effects"
           },
           "succeeds": {
-            "href": "https://horizon.stellar.org/effects?order=desc&cursor=98448467264811009"
+            "href": "https://horizon.arunika.io/effects?order=desc&cursor=98448467264811009"
           },
           "precedes": {
-            "href": "https://horizon.stellar.org/effects?order=asc&cursor=98448467264811009"
+            "href": "https://horizon.arunika.io/effects?order=asc&cursor=98448467264811009"
           }
         },
         "id": "98448467264811009",

@@ -25,7 +25,7 @@ var DefaultTestNetClient = &Client{
 
 // DefaultPublicNetClient is a default client to connect to public network
 var DefaultPublicNetClient = &Client{
-	URL:  "https://horizon.stellar.org",
+	URL:  "https://horizon.arunika.io",
 	HTTP: http.DefaultClient,
 }
 
